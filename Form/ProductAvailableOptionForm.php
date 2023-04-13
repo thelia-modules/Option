@@ -17,7 +17,7 @@ class ProductAvailableOptionForm extends BaseForm
     /**
      * @throws PropelException
      */
-    protected function buildForm()
+    protected function buildForm() : void
     {
         $this->formBuilder
             ->add(

@@ -3,22 +3,21 @@
 namespace Option\Event;
 
 use Option\Model\OptionProduct;
-use Propel\Runtime\Collection\ObjectCollection;
 use Thelia\Core\Event\ActionEvent;
 use Thelia\Model\Product;
 
 class CheckOptionEvent extends ActionEvent
 {
-    const OPTION_CHECK_IS_VALID = 'option_check_is_valid';
+    public const OPTION_CHECK_IS_VALID = 'option_check_is_valid';
 
     /** @var bool */
-    protected $isValid;
+    protected bool $isValid;
 
     /** @var Product */
-    protected $product;
+    protected Product $product;
 
     /** @var OptionProduct[] */
-    protected $options;
+    protected array $options;
 
     /**
      * @return Product
@@ -47,9 +46,9 @@ class CheckOptionEvent extends ActionEvent
         $this->options = $options;
         return $this;
     }
-
+    
     /**
-     * @return OptionProduct[]
+     * @return array|null
      */
     public function getOptions(): array|null
     {

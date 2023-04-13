@@ -1,7 +1,7 @@
 <div class="form-container">
 
     {form name="thelia.admin.product.modification"}
-    <form method="POST" action="{url path='/admin/option/update/save'}" {form_enctype} class="clearfix">
+    <form method="POST" action="{url path='/admin/option/update'}" {form_enctype} class="clearfix">
 
         <div class="row inner-toolbar">
             <div class="col-md-3 inner-actions">
@@ -36,7 +36,7 @@
 
             <div class="col-md-6 inner-actions text-right">
                 <button type="submit" class="form-submit-button btn btn-sm btn-default btn-success" title="{intl l='Save'}">{intl l='Save'} <span class="glyphicon glyphicon-ok"></span></button>
-                <a href="{{url path='/admin/module/Option'} nofilter}" class="page-close-button btn btn-sm btn-default">{intl l='Close'} <span class="glyphicon glyphicon-remove"></span></a>
+                <a href="{url path='/admin/module/Option'}" class="page-close-button btn btn-sm btn-default">{intl l='Close'} <span class="glyphicon glyphicon-remove"></span></a>
             </div>
         </div>
 

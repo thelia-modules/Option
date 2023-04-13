@@ -1,0 +1,38 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="form-container">
+            {form namme="products_with_available_option_form"}
+                <form method="POST" action="{url path='/admin/option/category/update'}"
+                id="product_option_on_category_form">
+
+
+                <h2>LISTE DES PRODUITS DE LA CATEGORIE</h2>
+                <h3>Option sélectionnée : {$option_product_id}</h3>
+                {loop name="category_products_list" type="product" category="$category_id" order="manual"}
+                    <input name="productsWithOption[]" type="checkbox" {if in_array($ID, $category_option_product_ids)
+                }checked{/if} value={$ID}>ID: {$ID} - Rubrique: {$DEFAULT_CATEGORY} - {$TITLE}{if in_array($ID,
+                $category_option_product_ids)} - Option FOUND {/if}<br>
+                    <div class="combinations">
+                        LISTE DES DECLINAISONS DU PRODUIT:
+                        {loop name="pse" type="product_sale_elements" product={$ID}}
+                            <div>
+                                {loop name="combi" type="attribute_combination" product_sale_elements="$ID"}
+                                {$ATTRIBUTE_ID}. {$ATTRIBUTE_TITLE} = {$ATTRIBUTE_AVAILABILITY_ID}. {$ATTRIBUTE_AVAILABILITY_TITLE}<br />
+                                {/loop}
+                                <br />{$WEIGHT} g
+                                <br /><strong>{if $IS_PROMO == 1} {$PROMO_PRICE} € (instead of {$PRICE}) {else} {$PRICE} € {/if}</strong>
+                                <br /><br />
+                            </div>
+                        {/loop}
+                    </div>
+                {/loop}
+                <span class="input-group-btn">
+                    <button class="btn btn-primary action-btn" type="submit">
+                        {intl d='option.bo.default' l="Appliquer"}
+                    </button>
+                </span>
+                </form>
+            {/form}
+        </div>
+    </div>
+</div>

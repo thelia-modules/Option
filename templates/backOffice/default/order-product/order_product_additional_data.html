@@ -1,34 +1,3 @@
-{if count($orderProductCustomizations) > 0}
-    <table class="table table-condensed table-bordered">
-        <thead>
-            <tr>
-                <th class="text-center" colspan="3"> {intl l="Options" d="option.bo.default"}</th>
-            </tr>
-        </thead>
-        <tr>
-            <th>
-                {intl l="Type" d="option.bo.default"}
-            </th>
-            <th>
-                {intl l="Font" d="option.bo.default"}
-            </th>
-            <th>
-                {intl l="Value" d="option.bo.default"}
-            </th>
-        </tr>
-        {foreach from=$orderProductCustomizations item=orderProductCustomization}
-            {$data = $orderProductCustomization->getCustomisationData()|json_decode:true}
-            <tr>
-                <td>
-                    {key($data)}
-                </td>
-                <td>
-                    {array_pop($data)}
-                </td>
-                <td>
-                    {$data['line']}
-                </td>
-            </tr>
-        {/foreach}
-    </table>
-{/if}
+<pre>
+    {$orderProductCustomization|@var_dump}
+</pre>

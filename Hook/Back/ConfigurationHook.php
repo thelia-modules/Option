@@ -2,7 +2,8 @@
 
 namespace Option\Hook\Back;
 
-use Option\Service\BackOffice\OptionCategoryService;
+use Exception;
+use Option\Service\Option;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Thelia\Core\Event\Hook\HookRenderEvent;
 use Thelia\Core\Hook\BaseHook;
@@ -11,25 +12,49 @@ use TheliaSmarty\Template\SmartyParser;
 
 class ConfigurationHook extends BaseHook
 {
-    private $optionCategoryService;
-
     public function __construct(
-        OptionCategoryService $optionCategoryService,
-        SmartyParser $parser = null,
-        AssetResolverInterface $resolver = null,
-        EventDispatcherInterface $eventDispatcher = null
+        SmartyParser $parser,
+        AssetResolverInterface $resolver,
+        EventDispatcherInterface $eventDispatcher,
+        protected Option $optionService,
     )
     {
         parent::__construct($parser, $resolver, $eventDispatcher);
-        $this->optionCategoryService = $optionCategoryService;
     }
 
+    public static function getSubscribedHooks(): array
+    {
+        return [
+            "module.configuration" => [
+                [
+                    "type" => "back",
+                    "method" => "onModuleConfiguration"
+                ]
+            ],
+            "module.config-js" => [
+                [
+                    "type" => "back",
+                    "method" => "onModuleConfigurationJs"
+                ]
+            ],
+            "main.in-top-menu-items" => [
+                [
+                    "type" => "back",
+                    "method" => "onMainTopMenuTools"
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * @throws Exception
+     */
     public function onModuleConfiguration(HookRenderEvent $event): void
     {
-        $optionCategory = $this->optionCategoryService->getOptionCategory();
+        $optionCategory = $this->optionService->getOptionCategory();
 
         $event->add(
-            $this->render('module-configuration.html', [
+            $this->render('option-configuration.html', [
                 'category_id' => $optionCategory->getId()
             ])
         );
@@ -38,7 +63,7 @@ class ConfigurationHook extends BaseHook
     public function onModuleConfigurationJs(HookRenderEvent $event): void
     {
         $event->add(
-            $this->render('module-configuration.js.html')
+            $this->render('option-configuration.js.html')
         );
     }
 

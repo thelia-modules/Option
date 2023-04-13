@@ -53,3 +53,4 @@ Add a complete exemple of your loop
 ## Other ?
 
 If you have other think to put, feel free to complete your readme as you want.
+# Option

@@ -12,28 +12,30 @@ use Thelia\Core\Event\TheliaEvents;
 
 class DuplicateCartItemListener implements EventSubscriberInterface
 {
-    private $optionCartItemService;
+    private OptionCartItemService $optionCartItemService;
 
     public function __construct(OptionCartItemService $optionCartItemService)
     {
         $this->optionCartItemService = $optionCartItemService;
     }
-
+    
+    /**
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
     public function duplicateOrderProductData(CartItemDuplicationItem $event)
     {
         Propel::disableInstancePooling();
         $options = OptionCartItemCustomizationQuery::create()
-            ->filterByCartItemId($event->getOldItem()->getId())
+            ->filterByCartItemOptionId($event->getOldItem()->getId())
             ->find();
 
-        /** @var  OptionCartItemCustomization $options */
+        /** @var  OptionCartItemCustomization[] $options */
         foreach ($options as $option) {
             $option
-                ->setCartItemId($event->getNewItem()->getId())
+                ->setCartItemOptionId($event->getNewItem()->getId())
                 ->save();
-
-            $this->optionCartItemService->handleCartItemOptionPrice($event->getNewItem());
         }
+        $this->optionCartItemService->handleCartItemOptionPrice($event->getNewItem());
     }
 
     public static function getSubscribedEvents()

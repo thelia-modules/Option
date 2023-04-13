@@ -11,7 +11,7 @@ use Thelia\Model\OrderProduct;
 
 class OrderListener implements EventSubscriberInterface
 {
-    protected $customizationOrderProductService;
+    protected OptionOrderProductService $customizationOrderProductService;
 
     public function __construct(OptionOrderProductService $customizationOrderProductService)
     {
@@ -38,13 +38,11 @@ class OrderListener implements EventSubscriberInterface
     {
         $cartItemId = $orderProduct->getCartItemId();
         $customizations = OptionCartItemCustomizationQuery::create()
-            ->filterByCartItemId($cartItemId)
+            ->filterByCartItemOptionId($cartItemId)
             ->find();
 
         foreach ($customizations as $customization) {
             $customization
-                ->copy()
-                ->setCartItemId(null)
                 ->setOrderProductId($orderProduct->getId())
                 ->save();
         }

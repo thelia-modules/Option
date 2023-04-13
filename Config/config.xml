@@ -11,28 +11,7 @@
     </loops>
 
     <services>
-        <service id="option.category.service" alias="Option\Service\BackOffice\OptionCategoryService" public="true">
+        <service id="option.cart_item.service" alias="Option\Service\Front\OptionCartItemService" public="true">
         </service>
     </services>
-
-    <hooks>
-        <!-- Module configuration -->
-        <hook id="option.configuration" class="Option\Hook\Back\ConfigurationHook">
-            <tag name="hook.event_listener" event="module.configuration" type="back" method="onModuleConfiguration"/>
-            <tag name="hook.event_listener" event="module.config-js" type="back" method="onModuleConfigurationJs"/>
-            <tag name="hook.event_listener" event="main.in-top-menu-items" type="back" method="onMainTopMenuTools"/>
-            <argument type="service" id="option.category.service"/>
-        </hook>
-
-        <!-- Product Hook -->
-        <hook id="option.product_tab" class="Option\Hook\Back\ProductEditHook">
-            <tag name="hook.event_listener" event="product.tab" type="back" method="onProductTab"/>
-            <tag name="hook.event_listener" event="product.edit-js" type="back" method="onProductEditJs"/>
-        </hook>
-
-        <!-- Order product Hook -->
-        <hook id="option.order.product_tab" class="Option\Hook\Back\OrderProductHook">
-            <tag name="hook.event_listener" event="order-edit.product-list" type="back" method="onOrderEditProductList" />
-        </hook>
-    </hooks>
 </config>

@@ -1,9 +1,10 @@
 <?php
 
-namespace Option\EventListeners\ExtendsLoop;
+namespace Option\ExtendsLoop;
 
 use Option\Model\Map\OptionProductTableMap;
 use Propel\Runtime\ActiveQuery\Criteria;
+use Propel\Runtime\Exception\PropelException;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Thelia\Core\Event\Loop\LoopExtendsArgDefinitionsEvent;
 use Thelia\Core\Event\Loop\LoopExtendsBuildModelCriteriaEvent;
@@ -18,7 +19,7 @@ class OptionExtendProductLoop implements EventSubscriberInterface
     /**
      * @inheritdoc
      */
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             TheliaEvents::getLoopExtendsEvent(TheliaEvents::LOOP_EXTENDS_ARG_DEFINITIONS, 'product') => ['optionArgDefinitions', 128],
@@ -39,16 +40,16 @@ class OptionExtendProductLoop implements EventSubscriberInterface
     /**
      * @param LoopExtendsBuildModelCriteriaEvent $event
      */
-    public function optionBuildModelCriteria(LoopExtendsBuildModelCriteriaEvent $event)
+    public function optionBuildModelCriteria(LoopExtendsBuildModelCriteriaEvent $event): void
     {
         /** @var ProductQuery $query */
         $query = $event->getModelCriteria();
 
         if ($event->getLoop()->getOnlyOption()) {
             $query->useOptionProductQuery()
-                    ->withColumn(OptionProductTableMap::COL_ID, 'option_id')
+                ->withColumn(OptionProductTableMap::COL_ID, 'option_id')
                 ->endUse();
-            return null;
+            return ;
         }
 
         $query->useOptionProductQuery("join_option_alias", Criteria::LEFT_JOIN)
@@ -56,7 +57,10 @@ class OptionExtendProductLoop implements EventSubscriberInterface
             ->endUse();
     }
 
-    public function optionParseResults(LoopExtendsParseResultsEvent $event)
+    /**
+     * @throws PropelException
+     */
+    public function optionParseResults(LoopExtendsParseResultsEvent $event): void
     {
         if ($event->getLoop()->getOnlyOption()) {
             $loopResult = $event->getLoopResult();

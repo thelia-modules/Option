@@ -21,16 +21,6 @@ abstract class BaseOptionFrontForm extends BaseForm
                         new NotBlank()
                     ]
                 ]
-            )
-            ->add(
-                'optionCode',
-                TextType::class,
-                [
-                    'required' => true,
-                    'constraints' => [
-                        new NotBlank()
-                    ]
-                ]
             );
     }
 }

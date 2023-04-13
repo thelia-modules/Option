@@ -10,7 +10,19 @@ use Thelia\Tools\URL;
 
 class ProductEditHook extends BaseHook
 {
-    public function onProductTab(HookRenderBlockEvent $event)
+    public static function getSubscribedHooks(): array
+    {
+        return [
+            "product.tab" => [
+                [
+                    "type" => "back",
+                    "method" => "onProductTab"
+                ]
+            ]
+        ];
+    }
+
+    public function onProductTab(HookRenderBlockEvent $event): void
     {
         $event->add(
             [
@@ -20,10 +32,5 @@ class ProductEditHook extends BaseHook
                 'content' => "Contenu !"
             ]
         );
-    }
-
-    public function onProductEditJs(HookRenderEvent $event)
-    {
-
     }
 }

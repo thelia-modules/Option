@@ -29,7 +29,7 @@ class OptionPlugin extends AbstractSmartyPlugin
         $smarty->assign('customizationData', json_decode($orderProductCustomization->getCustomisationData(), true));
     }
 
-    public function getPluginDescriptors()
+    public function getPluginDescriptors(): array
     {
         return array(
             new SmartyPluginDescriptor("function", "getCustomizationData", $this, "getCustomizationData")

@@ -1,0 +1,53 @@
+<div class="col-md-6" id="options-container">
+    <div class="well well-sm">
+        <p class="title title-without-tabs"><a href="{url path='/admin/module/option'}">OPTIONS PAYANTES</a></p>
+        <p>Gestion des options payantes pour les produits utilisant ce gabarit</p>
+
+        <div class="form-container">
+            {include file = "template/include/add_option_product_form.html"}
+        </div>
+
+        <div class="table-responsive" style="margin-top: 1rem">
+            <table class="table table-striped table-condensed table-left-aligned">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>{intl d='option.bo.default' l="Référence"}</th>
+                        <th>{intl d='option.bo.default' l="Titre de l'option"}</th>
+                        <th>{intl d='option.bo.default' l="Prix"}</th>
+                        <th class="text-right">{intl d='option.bo.default' l="Actions"}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {loop name="option_list" table_name="template_available_option" type="generic"
+                filters="template_id:{$template_id}"}
+                    {$CURENT_OPTION_ID = $OPTION_ID}
+                    {loop name="option" table_name="option_product" type="generic" filters="id:{$OPTION_ID}"}
+                        {$OPTION_PRODUCT_ID = $PRODUCT_ID}
+                    {/loop}
+                    {loop name="option_product_list" type="product" only_option=1 visible="*" id="$OPTION_PRODUCT_ID"|default:null
+                    backend_context="1" }
+                        <tr>
+                            <td>{$CURENT_OPTION_ID}</td>
+                            <td>{$REF}</td>
+                            <td>
+                                <a href="{url
+                                path="/admin/option/update" option_id=$ID}">{$TITLE}</a>
+                            </td>
+                            <td>{format_money number=$BEST_TAXED_PRICE}</td>
+                            <td class="text-right">
+                                <a class="btn btn-default btn-xs" title="Supprimer" href="{url
+                                path="/admin/option/template/delete" template_id=$template_id
+                                option_product_id=$CURENT_OPTION_ID}">
+                                    <span class="glyphicon glyphicon-trash"></span>
+                                </a>
+                            </td>
+                        </tr>
+                    {/loop}
+                {/loop}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+

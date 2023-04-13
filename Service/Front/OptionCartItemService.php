@@ -7,7 +7,9 @@ use Option\Model\OptionCartItemCustomizationQuery;
 use Option\Model\OptionProduct;
 use Option\Model\ProductAvailableOption;
 use Option\Model\ProductAvailableOptionQuery;
+use Option\Service\Option;
 use Propel\Runtime\Exception\PropelException;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Thelia\Model\CartItem;
 use Thelia\Model\Product;
@@ -16,11 +18,11 @@ use Thelia\TaxEngine\TaxEngine;
 
 class OptionCartItemService
 {
-    protected $request;
-    protected $optionService;
-    protected $taxEngine;
+    protected ?Request $request;
+    protected Option $optionService;
+    protected TaxEngine $taxEngine;
 
-    public function __construct(RequestStack $request, OptionService $optionService, TaxEngine $taxEngine)
+    public function __construct(RequestStack $request, Option $optionService, TaxEngine $taxEngine)
     {
         $this->request = $request->getCurrentRequest();
         $this->optionService = $optionService;
@@ -33,30 +35,55 @@ class OptionCartItemService
      */
     public function handleCartItemOptionPrice(CartItem $cartItem): void
     {
+        $totalCustoms = $this->calculateTotalCustomPrice($cartItem);
+
+        $cartItem
+            ->setPrice((float)$cartItem->getPrice() + $totalCustoms['totalCustomizationPrice'])
+            ->setPromoPrice((float)$cartItem->getPromoPrice() + $totalCustoms['totalCustomizationPrice'])
+            ->save()
+        ;
+    }
+    
+    /**
+     * @param CartItem $cartItem
+     * @throws PropelException
+     */
+    public function removeCartItemOptionPrice(CartItem $cartItem): void
+    {
+        $totalCustoms = $this->calculateTotalCustomPrice($cartItem);
+        
+        $cartItem
+            ->setPrice((float)$cartItem->getPrice() - $totalCustoms['totalCustomizationPrice'])
+            ->setPromoPrice((float)$cartItem->getPromoPrice() - $totalCustoms['totalCustomizationPromoPrice'])
+            ->save();
+    }
+    
+    /**
+     * @throws PropelException
+     */
+    public function calculateTotalCustomPrice(Cartitem $cartItem): array
+    {
         $options = $this->getOptionsByCartItem($cartItem);
-
-        //Calculate option HT price with cartitam tax rule.
+    
+        // Calculate option HT price with cartItem tax rule.
         $taxCalculator = $this->getTaxCalculator($cartItem);
-
+    
         $totalCustomizationPrice = 0;
         $totalCustomizationPromoPrice = 0;
-
+    
         /** @var Product $option */
         foreach ($options as $option) {
             $totalCustomizationPrice += $taxCalculator->getUntaxedPrice($this->optionService->getOptionTaxedPrice($option));
             $totalCustomizationPromoPrice += $taxCalculator->getUntaxedPrice($this->optionService->getOptionTaxedPrice($option, true));
         }
-
-        $cartItem
-            ->setPrice((float)$cartItem->getPrice() + $totalCustomizationPrice)
-            ->setPromoPrice((float)$cartItem->getPromoPrice() + $totalCustomizationPromoPrice)
-            ->save();
+        
+        return [
+            'totalCustomizationPrice' => $totalCustomizationPrice,
+            'totalCustomizationPromoPrice' => $totalCustomizationPromoPrice,
+        ];
     }
-
+    
     /**
-     * @param CartItem $cartItem
-     * @param null $optionId
-     * @return array | Product
      * @throws PropelException
      */
     public function getOptionsByCartItem(CartItem $cartItem): array
@@ -74,36 +101,37 @@ class OptionCartItemService
     }
 
     /**
-     * @param CartItem $cartItem
-     * @param OptionProduct $option
-     * @param $formData
      * @throws PropelException
      */
-    public function persistCartItemCustomizationData(CartItem $cartItem, OptionProduct $optionProduct, $formData)
+    public function persistCartItemCustomizationData(CartItem $cartItem, OptionProduct $optionProduct, array $formData): void
     {
-        $customizationCartItemData = OptionCartItemCustomizationQuery::create()
-            ->filterByCartItemId($cartItem->getId())
-            ->useProductAvailableOptionQuery()
-                ->filterByOptionId($optionProduct->getId())
-            ->endUse()
+        $productAvailableOption = ProductAvailableOptionQuery::create()
+            ->filterByProductId($cartItem->getProductId())
+            ->filterByOptionId($optionProduct->getId())
             ->findOne();
-
-        if (!$customizationCartItemData) {
-            $productAvailableOption = ProductAvailableOptionQuery::create()
-                ->filterByOptionId($optionProduct->getId())
-                ->filterByProduct($cartItem->getProduct())
-            ->findOne();
-
-            $customizationCartItemData = new OptionCartItemCustomization();
-            $customizationCartItemData
-                ->setCartItemId($cartItem->getId())
-                ->setProductAvailableOptionId($productAvailableOption->getId());
+      
+        if (null === $productAvailableOption) {
+            return;
         }
+        
+        $customizationCartItemData = OptionCartItemCustomizationQuery::create()
+            ->filterByProductAvailableOptionId($productAvailableOption->getId())
+            ->filterByCartItemOptionId($cartItem->getId())->findOne();
+        
+        if (null !== $customizationCartItemData) {
+            return;
+        }
+        
+        $customizationCartItemData = new OptionCartItemCustomization();
+        $customizationCartItemData
+            ->setCartItemOptionId($cartItem->getId())
+            ->setProductAvailableOptionId($productAvailableOption->getId());
+        
 
-        $fields = ['optionId', 'optionCode'];
+        $fields = ['optionId', 'optionCode', 'error_message', 'success_url', 'error_url'];
 
         $customization = array_filter($formData, function ($key) use ($fields) {
-            return !in_array($key, $fields) ? true : false;
+            return !in_array($key, $fields);
         }, ARRAY_FILTER_USE_KEY);
 
         $taxCalculator = $this->getTaxCalculator($cartItem);
@@ -114,15 +142,16 @@ class OptionCartItemService
             ->setPrice($untaxedPrice)
             ->setTaxedPrice($price)
             ->setCustomisationData(json_encode($customization))
+            ->setQuantity($cartItem->getQuantity())
             ->save();
     }
 
     /**
-     * @param $cartItem
+     * @param CartItem $cartItem
      * @return Calculator
      * @throws PropelException
      */
-    private function getTaxCalculator($cartItem): Calculator
+    private function getTaxCalculator(CartItem $cartItem): Calculator
     {
         $taxCalculator = new Calculator();
         $taxCalculator->load($cartItem->getProduct(), $this->taxEngine->getDeliveryCountry(), $this->taxEngine->getDeliveryState());

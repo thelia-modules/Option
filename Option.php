@@ -2,9 +2,10 @@
 
 namespace Option;
 
-use Option\Service\BackOffice\OptionCategoryService;
+use Option\Model\OptionProductQuery;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurator;
+use Symfony\Component\Finder\Finder;
 use Thelia\Install\Database;
 use Thelia\Module\BaseModule;
 
@@ -21,12 +22,35 @@ class Option extends BaseModule
 
     public function postActivation(ConnectionInterface $con = null): void
     {
-        if (!$this->getConfigValue('is_initialized', false)) {
-            $database = new Database($con);
-
+        $database = new Database($con);
+    
+        try {
+            OptionProductQuery::create()->findOne();
+        } catch (\Exception $ex) {
             $database->insertSql(null, array(__DIR__ . '/Config/TheliaMain.sql'));
+        }
+    }
 
-            $this->setConfigValue('is_initialized', true);
+    public function update($currentVersion, $newVersion, ConnectionInterface $con = null): void
+    {
+        $finder = (new Finder())
+            ->files()
+            ->name('#.*?\.sql#')
+            ->sortByName()
+            ->in(__DIR__ . DS . 'Config' . DS . 'update');
+
+        $database = new Database($con);
+
+        /** @var \Symfony\Component\Finder\SplFileInfo $updateSQLFile */
+        foreach ($finder as $updateSQLFile) {
+            if (version_compare($currentVersion, str_replace('.sql', '', $updateSQLFile->getFilename()), '<')) {
+                $database->insertSql(
+                    null,
+                    [
+                        $updateSQLFile->getPathname()
+                    ]
+                );
+            }
         }
     }
 
