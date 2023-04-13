@@ -4,10 +4,8 @@ namespace Option\EventListeners;
 
 use JsonException;
 use Option\Event\OptionProductCreateEvent;
-use Option\Model\CategoryAvailableOptionQuery;
 use Option\Service\OptionProduct;
 use Option\Model\ProductAvailableOptionQuery;
-use Option\Model\TemplateAvailableOptionQuery;
 use Propel\Runtime\Exception\PropelException;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Thelia\Core\Event\Product\ProductCreateEvent;
@@ -34,33 +32,29 @@ class ProductCreationListener implements EventSubscriberInterface
         $newProductId = $newProduct->getId();
 
         $template = $newProduct->getTemplate();
-        if($template) {
-            $templateOptions = TemplateAvailableOptionQuery::create()->filterByTemplateId($template->getId())->find();
+        $templateOptions = $template?->getTemplateAvailableOptions();
+        if($templateOptions){
             foreach ($templateOptions as $templateOption){
-                $this->optionProductService->setOptionOnProduct($newProductId, $templateOption->getOptionId(),
-                    OptionProduct::ADDED_BY_TEMPLATE);
+                $this->optionProductService->setOptionOnProduct($newProductId, $templateOption->getOptionId(), OptionProduct::ADDED_BY_TEMPLATE);
             }
         }
+
         $productCategories = $newProduct->getCategories();
         if($productCategories) {
             $categoriesOptions = [];
             foreach ($productCategories as $category) {
-                $categoriesOptions[] = CategoryAvailableOptionQuery::create()->filterByCategoryId($category->getId())->find();
+                $categoriesOptions[] = $category->getCategoryAvailableOptions();
                 if($categoriesOptions) {
-                    $tabOptionIds = [];
-                    foreach ($categoriesOptions as $categoriesOption) {
-                        $tabOptionIds[] = $categoriesOption->getColumnValues('OptionId');
-                    }
-                    foreach ($tabOptionIds[0] as $optionId){
-                        $this->optionProductService->setOptionOnProduct($newProductId, $optionId,
-                            OptionProduct::ADDED_BY_CATEGORY);
+                    foreach ($categoriesOptions[0] as $categoriesOption) {
+                        $this->optionProductService->setOptionOnProduct($newProductId, $categoriesOption->getOptionId
+                        (), OptionProduct::ADDED_BY_CATEGORY);
                     }
                 }
             }
         }
 
         ProductAvailableOptionQuery::create()
-            ->filterByProductId($event->getProduct()->getId())
+            ->filterByProductId($newProductId)
             ->findOneOrCreate()
             ->save();
     }

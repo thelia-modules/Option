@@ -133,12 +133,10 @@ class OptionProduct
             ->findOne();
 
         if(null !== $productAvailableOption){
-            if (!$force) {
-                $addedBy = $productAvailableOption->getOptionAddedBy();
-                if(count($addedBy) > 1) {
-                    unset($addedBy[array_search($deletedBy, $addedBy, true)]);
-                    $productAvailableOption->setOptionAddedBy($addedBy)->save();
-                }
+            $addedBy = $productAvailableOption->getOptionAddedBy();
+            if (!$force && (count($addedBy) > 1)) {
+                unset($addedBy[array_search($deletedBy, $addedBy, true)]);
+                $productAvailableOption->setOptionAddedBy($addedBy)->save();
             } else {
                 $productAvailableOption->delete();
             }
