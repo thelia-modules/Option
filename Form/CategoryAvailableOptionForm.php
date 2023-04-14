@@ -6,7 +6,6 @@ use Option\Model\Map\OptionProductTableMap;
 use Option\Option;
 use Propel\Runtime\Exception\PropelException;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
-use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Thelia\Form\BaseForm;

@@ -12,7 +12,9 @@ use Thelia\Tools\URL;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-/** @Route("/admin/option/product", name="admin_option_product") */
+/**
+ * @Route("/admin/option/product", name="admin_option_product")
+ */
 class ProductAvailableOptionController extends BaseAdminController
 {
     /** @Route("/show/{productId}", name="_option_product_show", methods="GET") */
@@ -26,7 +28,9 @@ class ProductAvailableOptionController extends BaseAdminController
         );
     }
 
-    /** @Route("/set", name="_option_product_set", methods="POST") */
+    /**
+     * @Route("/set", name="_option_product_set", methods="POST")
+     */
     public function setOptionProduct(OptionProduct $optionProductService): Response
     {
         $form = $this->createForm(ProductAvailableOptionForm::class);
@@ -53,7 +57,9 @@ class ProductAvailableOptionController extends BaseAdminController
         return $this->generateErrorRedirect($form);
     }
 
-    /** @Route("/delete", name="_option_product_delete", methods="GET") */
+    /**
+     * @Route("/delete", name="_option_product_delete", methods="GET")
+     */
     public function deleteOptionProduct(
         Request       $request,
         OptionProduct $optionProductService

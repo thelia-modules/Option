@@ -48,10 +48,10 @@ class OrderListener implements EventSubscriberInterface
         }
     }
 
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return array(
-            TheliaEvents::ORDER_BEFORE_PAYMENT => array('handleCustomization', 200)
+            TheliaEvents::ORDER_BEFORE_PAYMENT => ['handleCustomization', 200]
         );
     }
 }

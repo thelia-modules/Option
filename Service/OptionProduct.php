@@ -37,7 +37,7 @@ class OptionProduct
 
         $newAddedBy = [];
         $curentAddedBy = $curentProductAvailableOption?->getColumnValues('OptionAddedBy');
-        if($curentAddedBy) {
+        if ($curentAddedBy) {
             foreach ($curentAddedBy[0] as $item) {
                 if ($item !== $addedBy) {
                     $newAddedBy[] = $item;
@@ -64,25 +64,10 @@ class OptionProduct
      */
     public function setOptionOnCategoryProducts(Category $category, int $optionId): void
     {
-        $categoryChildren = CategoryQuery::create()->filterByParent($category->getId())->find();
+        $products = [];
+        $this->setCategoryTree($category, $optionId, $products);
 
-        if($categoryChildren){
-            foreach ($categoryChildren as $categoryChild){
-                CategoryAvailableOptionQuery::create()
-                    ->filterByCategoryId($categoryChild->getId())
-                    ->filterByOptionId($optionId)
-                    ->findOneOrCreate()
-                    ->save();
-            }
-        }
-
-        CategoryAvailableOptionQuery::create()
-            ->filterByCategoryId($category->getId())
-            ->filterByOptionId($optionId)
-            ->findOneOrCreate()
-            ->save();
-
-        foreach ($category->getProducts() as $product) {
+        foreach ($products as $product) {
             $this->setOptionOnProduct($product->getId(), $optionId, self::ADDED_BY_CATEGORY);
         }
     }
@@ -97,7 +82,7 @@ class OptionProduct
      */
     public function setOptionOnTemplateProducts(Template $template, int $optionId): void
     {
-       TemplateAvailableOptionQuery::create()
+        TemplateAvailableOptionQuery::create()
             ->filterByTemplateId($template->getId())
             ->filterByOptionId($optionId)
             ->findOneOrCreate()
@@ -132,7 +117,7 @@ class OptionProduct
             ->filterByProductId($productId)
             ->findOne();
 
-        if(null !== $productAvailableOption){
+        if (null !== $productAvailableOption) {
             $addedBy = $productAvailableOption->getOptionAddedBy();
             if (!$force && (count($addedBy) > 1)) {
                 unset($addedBy[array_search($deletedBy, $addedBy, true)]);
@@ -149,11 +134,11 @@ class OptionProduct
      */
     public function deleteOptionOnCategoryTree(Category $category, int $optionId, bool $deleteAll): void
     {
-        if ($deleteAll){
+        if ($deleteAll) {
             $categoryChildren = CategoryQuery::create()->filterByParent($category->getId())->find();
 
-            if($categoryChildren){
-                foreach ($categoryChildren as $categoryChild){
+            if ($categoryChildren) {
+                foreach ($categoryChildren as $categoryChild) {
                     CategoryAvailableOptionQuery::create()
                         ->filterByCategoryId($categoryChild->getId())
                         ->filterByOptionId($optionId)
@@ -186,5 +171,24 @@ class OptionProduct
         foreach ($template->getProducts() as $product) {
             $this->deleteOptionOnProduct($optionId, $product->getId(), self::ADDED_BY_TEMPLATE);
         }
+    }
+
+    protected function setCategoryTree(Category $category, int $optionId, array &$products): void
+    {
+        $childrenCategories = CategoryQuery::create()->filterByParent($category->getId())->find();
+
+        CategoryAvailableOptionQuery::create()
+            ->filterByCategoryId($category->getId())
+            ->filterByOptionId($optionId)
+            ->findOneOrCreate()
+            ->save();
+
+        foreach ($childrenCategories as $childrenCategory) {
+            if ($childrenCategory->getParent()) {
+                $this->setCategoryTree($childrenCategory, $optionId, $products);
+            }
+        }
+
+        $products = array_merge($category->getProducts()->getData(), $products);
     }
 }

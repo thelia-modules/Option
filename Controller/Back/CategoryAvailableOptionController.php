@@ -21,7 +21,9 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class CategoryAvailableOptionController extends BaseAdminController
 {
-    /** @Route("/show/{categoryId}", name="_option_category_show", methods="GET") */
+    /**
+     * @Route("/show/{categoryId}", name="_option_category_show", methods="GET")
+     */
     public function showCategoryOptionsProduct(int $categoryId): Response
     {
         return $this->render(
@@ -32,7 +34,9 @@ class CategoryAvailableOptionController extends BaseAdminController
         );
     }
 
-    /** @Route("/set", name="_option_category_set", methods="POST") */
+    /**
+     * @Route("/set", name="_option_category_set", methods="POST")
+     */
     public function setOptionProductOnCategory(Request $request, OptionProduct $optionProductService): Response
     {
         $form = $this->createForm(CategoryAvailableOptionForm::class);
@@ -60,7 +64,9 @@ class CategoryAvailableOptionController extends BaseAdminController
         return $this->generateErrorRedirect($form);
     }
 
-    /** @Route("/delete", name="_option_category_delete", methods="GET") */
+    /**
+     * @Route("/delete", name="_option_category_delete", methods="GET")
+     */
     public function deleteOptionProductOnCategory( Request $request, OptionProduct $optionProductService): Response
     {
         try {
@@ -87,9 +93,9 @@ class CategoryAvailableOptionController extends BaseAdminController
 
     /**
      * TODO : WIP - Lists category's products.
-     * @Route("/test", name="_option_category_test", methods="GET")
+     * @Route("/check", name="_option_category_check", methods="GET")
      */
-    public function test( Request $request ): Response
+    public function check( Request $request ): Response
     {
         $categoryId = $request->get('category_id');
         $optionProductId = $request->get('option_product_id');
@@ -97,7 +103,7 @@ class CategoryAvailableOptionController extends BaseAdminController
         ($categoryId), $optionProductId);
 
         return $this->render(
-            'category/test',
+            'category/check',
             [
                 'category_id' => $categoryId,
                 'option_product_id' => $optionProductId,
@@ -126,5 +132,4 @@ class CategoryAvailableOptionController extends BaseAdminController
 
         return $productsWithOptionIds;
     }
-
 }

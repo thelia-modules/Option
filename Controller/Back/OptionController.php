@@ -26,7 +26,9 @@ use Thelia\Model\TaxRuleQuery;
 use Thelia\TaxEngine\Calculator;
 use Thelia\Tools\TokenProvider;
 
-/** @Route("/admin/option", name="admin_option") */
+/**
+ * @Route("/admin/option", name="admin_option")
+ */
 class OptionController extends BaseAdminController
 {
     /**

@@ -61,9 +61,6 @@ class ProductUpdateListener implements EventSubscriberInterface
         $removedCategoryOptions = $removedCategory->getCategoryAvailableOptions();
         foreach ($removedCategoryOptions as $categoryOption){
             if(!in_array($categoryOption->getOptionId(), $remainingOptionIds, true)){
-//                var_dump($categoryOption->getOptionId());
-//                var_dump($remainingOptionIds);
-//                die();
                 $this->optionProductService->deleteOptionOnProduct($categoryOption->getOptionId(), $product->getId(),
                     OptionProduct::ADDED_BY_CATEGORY);
             }

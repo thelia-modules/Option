@@ -13,10 +13,14 @@ use Thelia\Tools\URL;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-/** @Route("/admin/option/template", name="admin_option_template") */
+/**
+ * @Route("/admin/option/template", name="admin_option_template")
+ */
 class TemplateAvailableOptionController extends BaseAdminController
 {
-    /** @Route("/set", name="_option_templates_set", methods="POST") */
+    /**
+     * @Route("/set", name="_option_templates_set", methods="POST")
+     */
     public function setOptionProductOnTemplate(OptionProduct $optionProductService): Response
     {
         $form = $this->createForm(TemplateAvailableOptionForm::class);
@@ -43,7 +47,9 @@ class TemplateAvailableOptionController extends BaseAdminController
         return $this->generateErrorRedirect($form);
     }
 
-    /** @Route("/delete", name="_option_template_delete", methods="GET") */
+    /**
+     * @Route("/delete", name="_option_template_delete", methods="GET")
+     */
     public function deleteOptionProductOnTemplate( Request $request, OptionProduct $optionProductService): Response
     {
         try {

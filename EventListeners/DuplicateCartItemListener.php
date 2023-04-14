@@ -5,6 +5,7 @@ namespace Option\EventListeners;
 use Option\Model\OptionCartItemCustomization;
 use Option\Model\OptionCartItemCustomizationQuery;
 use Option\Service\Front\OptionCartItemService;
+use Propel\Runtime\Exception\PropelException;
 use Propel\Runtime\Propel;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Thelia\Core\Event\Cart\CartItemDuplicationItem;
@@ -18,9 +19,9 @@ class DuplicateCartItemListener implements EventSubscriberInterface
     {
         $this->optionCartItemService = $optionCartItemService;
     }
-    
+
     /**
-     * @throws \Propel\Runtime\Exception\PropelException
+     * @throws PropelException
      */
     public function duplicateOrderProductData(CartItemDuplicationItem $event)
     {
@@ -28,6 +29,10 @@ class DuplicateCartItemListener implements EventSubscriberInterface
         $options = OptionCartItemCustomizationQuery::create()
             ->filterByCartItemOptionId($event->getOldItem()->getId())
             ->find();
+
+        if ($options->isEmpty()) {
+            return;
+        }
 
         /** @var  OptionCartItemCustomization[] $options */
         foreach ($options as $option) {
@@ -38,7 +43,7 @@ class DuplicateCartItemListener implements EventSubscriberInterface
         $this->optionCartItemService->handleCartItemOptionPrice($event->getNewItem());
     }
 
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return array(
             TheliaEvents::CART_ITEM_DUPLICATE => ['duplicateOrderProductData', 64]

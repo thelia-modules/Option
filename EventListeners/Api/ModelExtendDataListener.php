@@ -7,7 +7,6 @@ use OpenApi\Events\ModelExtendDataEvent;
 use OpenApi\Model\Api\CartItem;
 use Option\Model\OptionCartItemCustomization;
 use Option\Model\OptionCartItemCustomizationQuery;
-use Propel\Runtime\Exception\PropelException;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class ModelExtendDataListener implements EventSubscriberInterface
@@ -21,7 +20,6 @@ class ModelExtendDataListener implements EventSubscriberInterface
      *    )
      * )
      * @param ModelExtendDataEvent $event
-     * @throws PropelException
      */
     public function addDataOnCartItem(ModelExtendDataEvent $event)
     {
@@ -42,7 +40,7 @@ class ModelExtendDataListener implements EventSubscriberInterface
         );
     }
 
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             ModelExtendDataEvent::ADD_EXTEND_DATA_PREFIX . 'cart_item' => ['addDataOnCartItem', 300],
