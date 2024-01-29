@@ -6,7 +6,7 @@ use Option\Event\OptionProductCreateEvent;
 use Propel\Runtime\Exception\PropelException;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Thelia\Core\Event\Product\ProductUpdateEvent;
-use Thelia\Core\Form\TheliaFormFactoryInterface;
+use Thelia\Core\Form\TheliaFormFactory;
 use Thelia\Core\Template\ParserContext;
 use Thelia\Form\BaseForm;
 use Thelia\Form\Definition\AdminForm;
@@ -21,7 +21,7 @@ use Thelia\TaxEngine\Calculator;
 class OptionProvider
 {
     public function __construct(
-        protected TheliaFormFactoryInterface $theliaFormFactory,
+        protected TheliaFormFactory $theliaFormFactory,
         protected ParserContext              $parserContext
     )
     {

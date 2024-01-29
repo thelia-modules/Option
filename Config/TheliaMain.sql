@@ -13,7 +13,6 @@ CREATE TABLE `option_product`
 (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `product_id` INTEGER NOT NULL,
-    `configuration` TEXT,
     PRIMARY KEY (`id`),
     INDEX `fi_option_product_product_id` (`product_id`),
     CONSTRAINT `fk_option_product_product_id`
@@ -45,40 +44,6 @@ CREATE TABLE `product_available_option`
         ON UPDATE RESTRICT
         ON DELETE CASCADE,
     CONSTRAINT `fk_product_available_option_option_id`
-        FOREIGN KEY (`option_id`)
-        REFERENCES `option_product` (`id`)
-        ON UPDATE RESTRICT
-        ON DELETE CASCADE
-) ENGINE=InnoDB;
-
--- ---------------------------------------------------------------------
--- pse_available_option
--- ---------------------------------------------------------------------
-
-DROP TABLE IF EXISTS `pse_available_option`;
-
-CREATE TABLE `pse_available_option`
-(
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `pse_id` INTEGER NOT NULL,
-    `option_id` INTEGER NOT NULL,
-    `option_pse_id` INTEGER NOT NULL,
-    PRIMARY KEY (`id`),
-    UNIQUE INDEX `pse_available_option_UNIQUE` (`pse_id`, `option_pse_id`, `option_id`),
-    INDEX `idx_product_sale_elements_pse_id` (`pse_id`),
-    INDEX `idx_product_sale_elements_option_pse_id` (`option_pse_id`),
-    INDEX `idx_product_sale_elements_option_id` (`option_id`),
-    CONSTRAINT `fk_product_sale_elements_pse_id`
-        FOREIGN KEY (`pse_id`)
-        REFERENCES `product_sale_elements` (`id`)
-        ON UPDATE RESTRICT
-        ON DELETE CASCADE,
-    CONSTRAINT `fk_product_sale_elements_option_pse_id`
-        FOREIGN KEY (`option_pse_id`)
-        REFERENCES `product_sale_elements` (`id`)
-        ON UPDATE RESTRICT
-        ON DELETE CASCADE,
-    CONSTRAINT `fk_option_product_option_id`
         FOREIGN KEY (`option_id`)
         REFERENCES `option_product` (`id`)
         ON UPDATE RESTRICT

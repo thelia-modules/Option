@@ -22,12 +22,12 @@ class Option extends BaseModule
 
     public function postActivation(ConnectionInterface $con = null): void
     {
-        $database = new Database($con);
-    
-        try {
-            OptionProductQuery::create()->findOne();
-        } catch (\Exception $ex) {
+        if (!$this->getConfigValue('is_initialized', false)) {
+            $database = new Database($con);
+
             $database->insertSql(null, array(__DIR__ . '/Config/TheliaMain.sql'));
+
+            $this->setConfigValue('is_initialized', true);
         }
     }
 
