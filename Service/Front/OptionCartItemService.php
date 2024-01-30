@@ -33,9 +33,9 @@ class OptionCartItemService
      * @param CartItem $cartItem
      * @throws PropelException
      */
-    public function handleCartItemOptionPrice(CartItem $cartItem): void
+    public function handleCartItemOptionPrice(CartItem $cartItem,array $options): void
     {
-        $totalCustoms = $this->calculateTotalCustomPrice($cartItem);
+        $totalCustoms = $this->calculateTotalCustomPrice($cartItem, $options);
 
         $cartItem
             ->setPrice((float)$cartItem->getPrice() + $totalCustoms['totalCustomizationPrice'])
@@ -61,9 +61,11 @@ class OptionCartItemService
     /**
      * @throws PropelException
      */
-    public function calculateTotalCustomPrice(Cartitem $cartItem): array
+    public function calculateTotalCustomPrice(Cartitem $cartItem, array $options = []): array
     {
-        $options = $this->getOptionsByCartItem($cartItem);
+        if(!$options){
+            $options = $this->getOptionsByCartItem($cartItem);
+        }
     
         // Calculate option HT price with cartItem tax rule.
         $taxCalculator = $this->getTaxCalculator($cartItem);

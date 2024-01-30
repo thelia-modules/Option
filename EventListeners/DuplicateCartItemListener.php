@@ -34,13 +34,17 @@ class DuplicateCartItemListener implements EventSubscriberInterface
             return;
         }
 
+        $optionsProduct = [];
+
         /** @var  OptionCartItemCustomization[] $options */
         foreach ($options as $option) {
             $option
                 ->setCartItemOptionId($event->getNewItem()->getId())
                 ->save();
+
+            $optionsProduct[] = $option->getProductAvailableOption()->getOptionProduct()->getProduct();
         }
-        $this->optionCartItemService->handleCartItemOptionPrice($event->getNewItem());
+        $this->optionCartItemService->handleCartItemOptionPrice($event->getNewItem(), $optionsProduct);
     }
 
     public static function getSubscribedEvents(): array

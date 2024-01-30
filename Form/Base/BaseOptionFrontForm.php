@@ -12,7 +12,7 @@ abstract class BaseOptionFrontForm extends BaseForm
     {
         $this->formBuilder
             ->add(
-                'optionId',
+                'id',
                 IntegerType::class,
                 [
                     'required' => true,

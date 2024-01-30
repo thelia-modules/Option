@@ -2,44 +2,85 @@
 
 namespace Option\Service;
 
+use Exception;
 use Option\Event\OptionInputValidationEvent;
+use Option\Form\OptionFrontForm;
 use Option\Model\OptionProductQuery;
 use Option\Service\Front\OptionCartItemService;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Thelia\Core\Form\TheliaFormFactoryInterface;
-use Thelia\Core\Form\TheliaFormValidatorInterface;
+use Thelia\Core\Form\TheliaFormFactory;
+use Thelia\Core\Form\TheliaFormValidator;
 use Thelia\Model\CartItem;
+use Thelia\Model\Product;
 
 class CartItemCustomizationOptionHandler
 {
     public function __construct(
-        protected EventDispatcherInterface     $dispatcher,
-        protected OptionCartItemService        $optionCartItemService,
-        protected RequestStack                 $requestStack,
-        protected TheliaFormFactoryInterface   $theliaFormFactory,
-        protected TheliaFormValidatorInterface $theliaFormValidator
+        protected EventDispatcherInterface $dispatcher,
+        protected OptionCartItemService    $optionCartItemService,
+        protected RequestStack             $requestStack,
+        protected TheliaFormFactory        $theliaFormFactory,
+        protected TheliaFormValidator      $theliaFormValidator
     )
     {
     }
 
-    public function updateCustomizationOptionOnCartItem(CartItem $cartItem): void
+    public function updateCustomizationOptionOnCartItem(CartItem $cartItem, string $optionCode): void
     {
-        if (!$optionCodes = $this->requestStack->getCurrentRequest()->get('optionCodes') ?? null) {
-            return;
-        }
+        $options =$this->requestStack->getCurrentRequest()->get('options');
 
-        foreach ($optionCodes as $optionCode) {
-            $form = $this->theliaFormFactory->createForm($optionCode, FormType::class, [], ['csrf_protection' => false]);
+        /** @var Product[] $optionsProduct */
+        $optionsProduct = $this->optionCartItemService->getOptionsByCartItem($cartItem);
 
+        $optionsProduct = array_filter($optionsProduct,
+            function ($optionsProduct) use ($options) {
+                if (in_array($optionsProduct->getRef(), array_keys($options))) {
+                    return true;
+                }
+                return false;
+            }
+        );
+
+        foreach ($optionsProduct as $optionProduct) {
+            $formName = $optionProduct->getRef();
+            $formData = $options[$optionProduct->getRef()];
+
+            try {
+                $form = $this->theliaFormFactory->createForm(
+                    $formName,
+                    FormType::class,
+                    $formData,
+                    ['csrf_protection' => false]
+                );
+            } catch (Exception) {
+                $form = $this->theliaFormFactory->createForm(
+                    OptionFrontForm::class,
+                    FormType::class,
+                    $formData,
+                    ['csrf_protection' => false]
+                );
+            }
+
+            $form->getForm()->submit($formData);
             $this->theliaFormValidator->validateForm($form);
 
-            $optionId = $form->getForm()->get('optionId')->getData();
+            $optionId = $form->getForm()->get('id')->getData();
             $formData = $form->getForm()->getData();
 
-            if (!$optionProduct = OptionProductQuery::create()->findPk($optionId)) {
-                continue;
+            $optionProduct = OptionProductQuery::create()
+                ->filterById($optionId)
+                ->useProductAvailableOptionQuery()
+                    ->filterByProductId($cartItem->getProductId())
+                ->endUse()
+                ->useProductQuery()
+                    ->filterByRef($optionProduct->getRef())
+                ->endUse()
+                ->findOne();
+
+            if (!$optionProduct) {
+                return;
             }
 
             $extendEvent = (new OptionInputValidationEvent())
@@ -54,8 +95,8 @@ class CartItemCustomizationOptionHandler
                 $optionProduct,
                 $extendEvent->getOptionCustomizationFormData()
             );
-
-            $this->optionCartItemService->handleCartItemOptionPrice($cartItem);
         }
+
+        $this->optionCartItemService->handleCartItemOptionPrice($cartItem, $optionsProduct);
     }
 }
