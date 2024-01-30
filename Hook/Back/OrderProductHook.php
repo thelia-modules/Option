@@ -3,7 +3,7 @@
 namespace Option\Hook\Back;
 
 use JsonException;
-use Option\Model\OptionCartItemCustomizationQuery;
+use Option\Model\OptionCartItemQuery;
 use Thelia\Core\Event\Hook\HookRenderEvent;
 use Thelia\Core\Hook\BaseHook;
 
@@ -32,17 +32,17 @@ class OrderProductHook extends BaseHook
             return;
         }
 
-        $orderProductCustomization = OptionCartItemCustomizationQuery::create()
+        $orderProductOption = OptionCartItemQuery::create()
             ->filterByOrderProductId($orderProductId)
             ->findOne();
         
-        if (null === $orderProductCustomization) {
+        if (null === $orderProductOption) {
             return;
         }
 
         $event->add(
             $this->render('order-product/order_product_additional_data.html', [
-                "orderProductCustomization" => json_decode($orderProductCustomization?->getCustomisationData(), true, 512, JSON_THROW_ON_ERROR)
+                "orderProductCustomization" => json_decode($orderProductOption?->getCustomisationData(), true, 512, JSON_THROW_ON_ERROR)
             ])
         );
     }

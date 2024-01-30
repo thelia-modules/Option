@@ -27,7 +27,7 @@ class CartItemCustomizationOptionHandler
     {
     }
 
-    public function updateCustomizationOptionOnCartItem(CartItem $cartItem, string $optionCode): void
+    public function updateCustomizationOptionOnCartItem(CartItem $cartItem): void
     {
         $options =$this->requestStack->getCurrentRequest()->get('options');
 
@@ -43,7 +43,7 @@ class CartItemCustomizationOptionHandler
             }
         );
 
-        foreach ($optionsProduct as $optionProduct) {
+        foreach ($optionsProduct as $index => $optionProduct) {
             $formName = $optionProduct->getRef();
             $formData = $options[$optionProduct->getRef()];
 
@@ -69,7 +69,7 @@ class CartItemCustomizationOptionHandler
             $optionId = $form->getForm()->get('id')->getData();
             $formData = $form->getForm()->getData();
 
-            $optionProduct = OptionProductQuery::create()
+            $optionProductModel = OptionProductQuery::create()
                 ->filterById($optionId)
                 ->useProductAvailableOptionQuery()
                     ->filterByProductId($cartItem->getProductId())
@@ -79,7 +79,8 @@ class CartItemCustomizationOptionHandler
                 ->endUse()
                 ->findOne();
 
-            if (!$optionProduct) {
+            if (!$optionProductModel) {
+                unset($optionsProduct[$index]);
                 return;
             }
 
@@ -92,7 +93,7 @@ class CartItemCustomizationOptionHandler
 
             $this->optionCartItemService->persistCartItemCustomizationData(
                 $cartItem,
-                $optionProduct,
+                $optionProductModel,
                 $extendEvent->getOptionCustomizationFormData()
             );
         }

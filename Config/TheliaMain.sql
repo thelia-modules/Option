@@ -105,12 +105,12 @@ CREATE TABLE `template_available_option`
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------------
--- option_cart_item_customization
+-- option_cart_item
 -- ---------------------------------------------------------------------
 
-DROP TABLE IF EXISTS `option_cart_item_customization`;
+DROP TABLE IF EXISTS `option_cart_item`;
 
-CREATE TABLE `option_cart_item_customization`
+CREATE TABLE `option_cart_item`
 (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `product_available_option_id` INTEGER NOT NULL,

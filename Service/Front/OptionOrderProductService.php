@@ -2,8 +2,8 @@
 
 namespace Option\Service\Front;
 
-use Option\Model\OptionCartItemCustomization;
-use Option\Model\OptionCartItemCustomizationQuery;
+use Option\Model\OptionCartItem;
+use Option\Model\OptionCartItemQuery;
 use Propel\Runtime\Exception\PropelException;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -58,7 +58,7 @@ class OptionOrderProductService
             $forceUntaxed = 1;
         }
 
-        $customizations = OptionCartItemCustomizationQuery::create()
+        $customizations = OptionCartItemQuery::create()
             ->filterByOrderProductId($orderProduct->getId())
             ->find();
 
@@ -95,11 +95,11 @@ class OptionOrderProductService
      * @throws PropelException
      */
     public function createCustomizationOrderProduct(
-        Order $placedOrder,
-        OrderProduct $orderProductMaster,
-        Product $product,
-        OptionCartItemCustomization $customization,
-        $forceUntaxed = 0
+        Order          $placedOrder,
+        OrderProduct   $orderProductMaster,
+        Product        $product,
+        OptionCartItem $customization,
+                       $forceUntaxed = 0
     ): array
     {
         $locale = $this->request->getSession()->getLang()->getLocale();
@@ -171,7 +171,7 @@ class OptionOrderProductService
      */
     public function updateCustomizationData($customizationOrderProductId, $customisation)
     {
-        $customization = OptionCartItemCustomizationQuery::create()->filterById($customisation->getId())->findOne();
+        $customization = OptionCartItemQuery::create()->filterById($customisation->getId())->findOne();
         $customization?->setDataCustomizationOrderProductId($customizationOrderProductId)->save();
         return null;
     }

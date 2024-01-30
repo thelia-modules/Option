@@ -2,8 +2,8 @@
 
 namespace Option\Service\Front;
 
-use Option\Model\OptionCartItemCustomization;
-use Option\Model\OptionCartItemCustomizationQuery;
+use Option\Model\OptionCartItem;
+use Option\Model\OptionCartItemQuery;
 use Option\Model\OptionProduct;
 use Option\Model\ProductAvailableOption;
 use Option\Model\ProductAvailableOptionQuery;
@@ -116,19 +116,18 @@ class OptionCartItemService
             return;
         }
         
-        $customizationCartItemData = OptionCartItemCustomizationQuery::create()
+        $optionCartItem = OptionCartItemQuery::create()
             ->filterByProductAvailableOptionId($productAvailableOption->getId())
             ->filterByCartItemOptionId($cartItem->getId())->findOne();
         
-        if (null !== $customizationCartItemData) {
+        if (null !== $optionCartItem) {
             return;
         }
-        
-        $customizationCartItemData = new OptionCartItemCustomization();
-        $customizationCartItemData
+
+        $optionCartItem = new OptionCartItem();
+        $optionCartItem
             ->setCartItemOptionId($cartItem->getId())
             ->setProductAvailableOptionId($productAvailableOption->getId());
-        
 
         $fields = ['optionId', 'optionCode', 'error_message', 'success_url', 'error_url'];
 
@@ -140,7 +139,7 @@ class OptionCartItemService
         $price = $this->optionService->getOptionTaxedPrice($optionProduct->getProduct());
         $untaxedPrice = $taxCalculator->getUntaxedPrice($price);
 
-        $customizationCartItemData
+        $optionCartItem
             ->setPrice($untaxedPrice)
             ->setTaxedPrice($price)
             ->setCustomisationData(json_encode($customization))

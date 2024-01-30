@@ -98,7 +98,7 @@
         </unique>
     </table>
 
-    <table name="option_cart_item_customization" namespace="Option\Model">
+    <table name="option_cart_item" namespace="Option\Model">
         <column autoIncrement="true" name="id" primaryKey="true" required="true" type="INTEGER" />
         <column name="product_available_option_id" type="INTEGER" required="true"/>
         <column name="cart_item_option_id" type="INTEGER" required="false"/>

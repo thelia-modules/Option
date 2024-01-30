@@ -2,7 +2,7 @@
 
 namespace Option\Smarty\Plugins;
 
-use Option\Model\OptionCartItemCustomizationQuery;
+use Option\Model\OptionCartItemQuery;
 use TheliaSmarty\Template\AbstractSmartyPlugin;
 use TheliaSmarty\Template\SmartyPluginDescriptor;
 
@@ -17,7 +17,7 @@ class OptionPlugin extends AbstractSmartyPlugin
             return;
         }
 
-        $orderProductCustomization = OptionCartItemCustomizationQuery::create()
+        $orderProductCustomization = OptionCartItemQuery::create()
             ->filterByOrderProductId($orderProductId)
             ->findOne();
 

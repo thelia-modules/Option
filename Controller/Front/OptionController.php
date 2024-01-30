@@ -92,7 +92,7 @@ class OptionController extends BaseFrontOpenApiController
 
     /**
      * @OA\Post(
-     *     path="/option/add/{optionCode}/{cartItemId}",
+     *     path="/option/add/{cartItemId}",
      *     tags={"Option"},
      *     summary="Add options to a cart item. If an option has customizations,
      *                  transmit user data with the optionCodes parameter array.",
@@ -105,14 +105,6 @@ class OptionController extends BaseFrontOpenApiController
      *               type="integer"
      *           )
      *      ),
-     *     @OA\Parameter(
-     *            name="optionCode",
-     *            in="path",
-     *            required=true,
-     *            @OA\Schema(
-     *                type="string"
-     *            )
-     *       ),
      *     @OA\RequestBody(
      *          @OA\MediaType(
      *              mediaType="application/json",
@@ -131,7 +123,7 @@ class OptionController extends BaseFrontOpenApiController
      *                              type="string"
      *                          )
      *                      )
-     *                  )
+     *                  ),
      *                  example={
      *                    "options": {
      *                          "OPTION_REF": {
@@ -161,19 +153,18 @@ class OptionController extends BaseFrontOpenApiController
      *     )
      * )
      */
-    #[Route(path: '/add/{optionCode}/{cartItemId}', name: '_add_cart_item_option', methods: ['POST'])]
+    #[Route(path: '/add/{cartItemId}', name: '_add_cart_item_option', methods: ['POST'])]
     public function addCartItemOption(
         CartItemCustomizationOptionHandler $optionFormHandler,
         OpenApiService                     $openApiService,
-        int                                $cartItemId,
-        string                             $optionCode,
+        int                                $cartItemId
     ): JsonResponse
     {
         if (null === $cartItem = CartItemQuery::create()->findPk($cartItemId)) {
             throw new Exception(Translator::getInstance()?->trans("Error, missing cart item parameter"));
         }
 
-        $optionFormHandler->updateCustomizationOptionOnCartItem($cartItem, $optionCode);
+        $optionFormHandler->updateCustomizationOptionOnCartItem($cartItem);
 
         return OpenApiService::jsonResponse([
             'cart' => $openApiService->getCurrentOpenApiCart()

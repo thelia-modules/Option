@@ -2,8 +2,8 @@
 
 namespace Option\EventListeners;
 
-use Option\Model\OptionCartItemCustomization;
-use Option\Model\OptionCartItemCustomizationQuery;
+use Option\Model\OptionCartItem;
+use Option\Model\OptionCartItemQuery;
 use Option\Service\Front\OptionCartItemService;
 use Propel\Runtime\Exception\PropelException;
 use Propel\Runtime\Propel;
@@ -26,7 +26,7 @@ class DuplicateCartItemListener implements EventSubscriberInterface
     public function duplicateOrderProductData(CartItemDuplicationItem $event)
     {
         Propel::disableInstancePooling();
-        $options = OptionCartItemCustomizationQuery::create()
+        $options = OptionCartItemQuery::create()
             ->filterByCartItemOptionId($event->getOldItem()->getId())
             ->find();
 
@@ -36,7 +36,7 @@ class DuplicateCartItemListener implements EventSubscriberInterface
 
         $optionsProduct = [];
 
-        /** @var  OptionCartItemCustomization[] $options */
+        /** @var  OptionCartItem[] $options */
         foreach ($options as $option) {
             $option
                 ->setCartItemOptionId($event->getNewItem()->getId())

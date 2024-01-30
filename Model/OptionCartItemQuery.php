@@ -2,7 +2,7 @@
 
 namespace Option\Model;
 
-use Option\Model\Base\OptionCartItemCustomizationQuery as BaseOptionCartItemCustomizationQuery;
+use Option\Model\Base\OptionCartItemQuery as BaseOptionCartItemQuery;
 
 /**
  * Skeleton subclass for performing query and update operations on the 'option_cart_item_customization' table.
@@ -13,7 +13,7 @@ use Option\Model\Base\OptionCartItemCustomizationQuery as BaseOptionCartItemCust
  * application requirements.  This class will only be generated as
  * long as it does not already exist in the output directory.
  */
-class OptionCartItemCustomizationQuery extends BaseOptionCartItemCustomizationQuery
+class OptionCartItemQuery extends BaseOptionCartItemQuery
 {
 
 }
