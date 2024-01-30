@@ -77,4 +77,4 @@ invoice, you will need to override the order_product_additional_data.html templa
 
 
 ## Loop
-Use generic loop !
+Use [generic](https://doc.thelia.net/docs/loops/Generic) loop !
