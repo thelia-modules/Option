@@ -1,7 +1,7 @@
 {extends file="admin-layout.tpl"}
 
 {block name="no-return-functions"}
-    {$admin_current_location = 'catalog'}
+    {$admin_current_location = 'option'}
     {$page={$page|default:{$smarty.get.page|default:1}}}
     {$current_tab={$current_tab|default:{$smarty.get.current_tab|default:"general"}}}
 {/block}

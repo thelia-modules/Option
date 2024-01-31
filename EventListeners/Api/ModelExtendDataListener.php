@@ -5,8 +5,8 @@ namespace Option\EventListeners\Api;
 use OpenApi\Annotations as OA;
 use OpenApi\Events\ModelExtendDataEvent;
 use OpenApi\Model\Api\CartItem;
-use Option\Model\OptionCartItem;
-use Option\Model\OptionCartItemQuery;
+use Option\Model\OptionCartItemOrderProduct;
+use Option\Model\OptionCartItemOrderProductQuery;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class ModelExtendDataListener implements EventSubscriberInterface
@@ -26,15 +26,15 @@ class ModelExtendDataListener implements EventSubscriberInterface
         /** @var CartItem $cartItem */
         $cartItem = $event->getModel();
 
-        $customizations = OptionCartItemQuery::create()
+        $customizations = OptionCartItemOrderProductQuery::create()
             ->filterByCartItemOptionId($cartItem->getId())
             ->find();
 
         $event->setExtendDataKeyValue(
             'customizations',
             array_map(
-                static function (OptionCartItem $customization) {
-                    return json_decode($customization->getCustomisationData(), true);
+                static function (OptionCartItemOrderProduct $customization) {
+                    return json_decode($customization->getCustomizationData(), true);
                 }, iterator_to_array($customizations)
             )
         );

@@ -105,43 +105,43 @@ CREATE TABLE `template_available_option`
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------------
--- option_cart_item
+-- option_cart_item_order_product
 -- ---------------------------------------------------------------------
 
-DROP TABLE IF EXISTS `option_cart_item`;
+DROP TABLE IF EXISTS `option_cart_item_order_product`;
 
-CREATE TABLE `option_cart_item`
+CREATE TABLE `option_cart_item_order_product`
 (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `product_available_option_id` INTEGER NOT NULL,
     `cart_item_option_id` INTEGER,
     `order_product_id` INTEGER,
-    `data_customization_order_product_id` INTEGER,
-    `customisation_data` TEXT,
+    `option_order_product_id` INTEGER,
+    `customization_data` TEXT,
     `price` DECIMAL(16,6) DEFAULT 0.000000,
     `taxed_price` DECIMAL(16,6) DEFAULT 0.000000,
     `quantity` VARCHAR(255),
     PRIMARY KEY (`id`),
-    INDEX `fi_cart_item_option_id_ci` (`cart_item_option_id`),
-    INDEX `fi_cart_item_customization_op` (`order_product_id`),
-    INDEX `fi_data_customization_order_product_op` (`data_customization_order_product_id`),
-    INDEX `fi_product_available_option_cart_item_customization` (`product_available_option_id`),
-    CONSTRAINT `fk_cart_item_option_id_ci`
+    INDEX `fi_option_cart_item_order_product_cioid` (`cart_item_option_id`),
+    INDEX `fi_option_cart_item_order_product_paoid` (`product_available_option_id`),
+    INDEX `fi_option_cart_item_order_product_opid` (`order_product_id`),
+    INDEX `fi_option_cart_item_order_product_oopid` (`option_order_product_id`),
+    CONSTRAINT `fk_option_cart_item_order_product_cioid`
         FOREIGN KEY (`cart_item_option_id`)
         REFERENCES `cart_item` (`id`)
         ON DELETE SET NULL,
-    CONSTRAINT `fk_cart_item_customization_op`
+    CONSTRAINT `fk_option_cart_item_order_product_paoid`
+        FOREIGN KEY (`product_available_option_id`)
+        REFERENCES `product_available_option` (`id`)
+        ON DELETE CASCADE,
+    CONSTRAINT `fk_option_cart_item_order_product_opid`
         FOREIGN KEY (`order_product_id`)
         REFERENCES `order_product` (`id`)
         ON DELETE SET NULL,
-    CONSTRAINT `fk_data_customization_order_product_op`
-        FOREIGN KEY (`data_customization_order_product_id`)
+    CONSTRAINT `fk_option_cart_item_order_product_oopid`
+        FOREIGN KEY (`option_order_product_id`)
         REFERENCES `order_product` (`id`)
-        ON DELETE SET NULL,
-    CONSTRAINT `fk_product_available_option_cart_item_customization`
-        FOREIGN KEY (`product_available_option_id`)
-        REFERENCES `product_available_option` (`id`)
-        ON DELETE CASCADE
+        ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 # This restores the fkey checks, after having unset them earlier

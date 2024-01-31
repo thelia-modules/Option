@@ -35,6 +35,8 @@ class OptionController extends BaseFrontOpenApiController
      *           )
      *      ),
      *     @OA\Response(
+     *          response="200",
+     *          description="Success",
      *          @OA\JsonContent(
      *              type="object",
      *              @OA\Property(

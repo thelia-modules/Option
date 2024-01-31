@@ -29,15 +29,13 @@ class CartItemCustomizationOptionHandler
 
     public function updateCustomizationOptionOnCartItem(CartItem $cartItem): void
     {
-        if (!$requestContent = json_decode($this->requestStack->getCurrentRequest()->getContent(), true)) {
+        $jsonRequest = json_decode($this->requestStack->getCurrentRequest()->getContent(), true);
+
+        if (empty($jsonRequest['options'])) {
             return;
         }
 
-        if (empty($requestContent['options'])) {
-            return;
-        }
-
-        $options = $requestContent['options'];
+        $options = $jsonRequest['options'];
 
         /** @var Product[] $optionsProduct */
         $optionsProduct = $this->optionCartItemService->getOptionsByCartItem($cartItem);
@@ -54,7 +52,6 @@ class CartItemCustomizationOptionHandler
         foreach ($optionsProduct as $index => $optionProduct) {
             $formName = $optionProduct->getRef();
             $formData = $options[$optionProduct->getRef()];
-
             try {
                 $form = $this->theliaFormFactory->createForm(
                     $formName,
@@ -62,7 +59,7 @@ class CartItemCustomizationOptionHandler
                     $formData,
                     ['csrf_protection' => false]
                 );
-            } catch (Exception) {
+            } catch (Exception $e) {
                 $form = $this->theliaFormFactory->createForm(
                     OptionFrontForm::class,
                     FormType::class,
@@ -80,10 +77,10 @@ class CartItemCustomizationOptionHandler
             $optionProductModel = OptionProductQuery::create()
                 ->filterById($optionId)
                 ->useProductAvailableOptionQuery()
-                ->filterByProductId($cartItem->getProductId())
+                    ->filterByProductId($cartItem->getProductId())
                 ->endUse()
                 ->useProductQuery()
-                ->filterByRef($optionProduct->getRef())
+                    ->filterByRef($optionProduct->getRef())
                 ->endUse()
                 ->findOne();
 

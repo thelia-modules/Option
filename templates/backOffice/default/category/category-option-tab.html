@@ -28,11 +28,7 @@
                        data-toggle="modal" data-target="#deleteOptionModal" title="Supprimer l'option">
                         <span class="glyphicon glyphicon glyphicon-remove-circle"></span></a>
                         {include file="category/include/modale-delete-category-option.html"}
-                    <a class="btn btn-info pull-right" href="{url path='/admin/option/category/test'
-                    category_id=$category_id option_product_id=$CURENT_OPTION_ID}">
-                        <span class="glyphicon glyphicon glyphicon-cog"></span>
-                    </a>
-                    <a class="btn btn-default pull-right"><span class="glyphicon glyphicon glyphicon glyphicon-eye-open"></span></a>
+                    <a class="btn btn-default pull-right" href="{url path="/admin/option/update" option_id=$OPTION_PRODUCT_ID}"><span class="glyphicon glyphicon glyphicon glyphicon-eye-open"></a>
                 </div>
             </div>
         </div>

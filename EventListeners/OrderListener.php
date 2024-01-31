@@ -2,7 +2,7 @@
 
 namespace Option\EventListeners;
 
-use Option\Model\OptionCartItemQuery;
+use Option\Model\OptionCartItemOrderProductQuery;
 use Option\Service\Front\OptionOrderProductService;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Thelia\Core\Event\Order\OrderEvent;
@@ -18,11 +18,11 @@ class OrderListener implements EventSubscriberInterface
         $this->customizationOrderProductService = $customizationOrderProductService;
     }
 
-    public function handleCustomization(OrderEvent $event)
+    public function handleCustomization(OrderEvent $event): void
     {
         $placedOrder = $event->getOrder();
         if (!$placedOrder) {
-            return null;
+            return;
         }
 
         $orderProducts = $placedOrder->getOrderProducts();
@@ -34,15 +34,15 @@ class OrderListener implements EventSubscriberInterface
         }
     }
 
-    protected function setOrderProductData(OrderProduct $orderProduct)
+    protected function setOrderProductData(OrderProduct $orderProduct): void
     {
         $cartItemId = $orderProduct->getCartItemId();
-        $customizations = OptionCartItemQuery::create()
+        $optionCartItemOrderProducts = OptionCartItemOrderProductQuery::create()
             ->filterByCartItemOptionId($cartItemId)
             ->find();
 
-        foreach ($customizations as $customization) {
-            $customization
+        foreach ($optionCartItemOrderProducts as $optionCartItemOrderProduct) {
+            $optionCartItemOrderProduct
                 ->setOrderProductId($orderProduct->getId())
                 ->save();
         }

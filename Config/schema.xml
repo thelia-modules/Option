@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <database defaultIdMethod="native" name="TheliaMain"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-          xsi:noNamespaceSchemaLocation="../../../vendor/thelia/propel/resources/xsd/database.xsd" >
+          xsi:noNamespaceSchemaLocation="/vendor/thelia/propel/resources/xsd/database.xsd" >
 
     <table name="option_product" namespace="Option\Model">
         <column autoIncrement="true" name="id" primaryKey="true" required="true" type="INTEGER" />
@@ -98,31 +98,31 @@
         </unique>
     </table>
 
-    <table name="option_cart_item" namespace="Option\Model">
+    <table name="option_cart_item_order_product" namespace="Option\Model">
         <column autoIncrement="true" name="id" primaryKey="true" required="true" type="INTEGER" />
         <column name="product_available_option_id" type="INTEGER" required="true"/>
         <column name="cart_item_option_id" type="INTEGER" required="false"/>
         <column name="order_product_id" type="INTEGER" required="false"/>
-        <column name="data_customization_order_product_id" type="INTEGER" required="false"/>
-        <column name="customisation_data" type="LONGVARCHAR"/>
+        <column name="option_order_product_id" type="INTEGER" required="false"/>
+        <column name="customization_data" type="LONGVARCHAR"/>
         <column defaultValue="0.000000" name="price" scale="6" size="16" type="DECIMAL" />
         <column defaultValue="0.000000" name="taxed_price" scale="6" size="16" type="DECIMAL" />
         <column name="quantity" size="255" type="VARCHAR"/>
 
-        <foreign-key foreignTable="cart_item" name="fk_cart_item_option_id_ci" onDelete="SET NULL">
+        <foreign-key foreignTable="cart_item" name="fk_option_cart_item_order_product_cioid" onDelete="SET NULL">
             <reference foreign="id" local="cart_item_option_id" />
         </foreign-key>
 
-        <foreign-key foreignTable="order_product" name="fk_cart_item_customization_op" onDelete="SET NULL">
+        <foreign-key foreignTable="product_available_option" name="fk_option_cart_item_order_product_paoid" onDelete="CASCADE">
+            <reference foreign="id" local="product_available_option_id" />
+        </foreign-key>
+
+        <foreign-key foreignTable="order_product" name="fk_option_cart_item_order_product_opid" onDelete="SET NULL">
             <reference foreign="id" local="order_product_id" />
         </foreign-key>
 
-        <foreign-key foreignTable="order_product" name="fk_data_customization_order_product_op" onDelete="SET NULL">
-            <reference foreign="id" local="data_customization_order_product_id" />
-        </foreign-key>
-
-        <foreign-key foreignTable="product_available_option" name="fk_product_available_option_cart_item_customization" onDelete="CASCADE">
-            <reference foreign="id" local="product_available_option_id" />
+        <foreign-key foreignTable="order_product" name="fk_option_cart_item_order_product_oopid" onDelete="SET NULL">
+            <reference foreign="id" local="option_order_product_id" />
         </foreign-key>
     </table>
 

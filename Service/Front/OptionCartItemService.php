@@ -2,8 +2,8 @@
 
 namespace Option\Service\Front;
 
-use Option\Model\OptionCartItem;
-use Option\Model\OptionCartItemQuery;
+use Option\Model\OptionCartItemOrderProduct;
+use Option\Model\OptionCartItemOrderProductQuery;
 use Option\Model\OptionProduct;
 use Option\Model\ProductAvailableOption;
 use Option\Model\ProductAvailableOptionQuery;
@@ -116,15 +116,14 @@ class OptionCartItemService
             return;
         }
         
-        $optionCartItem = OptionCartItemQuery::create()
+        $optionCartItem = OptionCartItemOrderProductQuery::create()
             ->filterByProductAvailableOptionId($productAvailableOption->getId())
             ->filterByCartItemOptionId($cartItem->getId())->findOne();
-        
-        if (null !== $optionCartItem) {
-            return;
+
+        if (null === $optionCartItem) {
+            $optionCartItem = new OptionCartItemOrderProduct();
         }
 
-        $optionCartItem = new OptionCartItem();
         $optionCartItem
             ->setCartItemOptionId($cartItem->getId())
             ->setProductAvailableOptionId($productAvailableOption->getId());
@@ -142,7 +141,7 @@ class OptionCartItemService
         $optionCartItem
             ->setPrice($untaxedPrice)
             ->setTaxedPrice($price)
-            ->setCustomisationData(json_encode($customization))
+            ->setCustomizationData(json_encode($customization))
             ->setQuantity($cartItem->getQuantity())
             ->save();
     }
