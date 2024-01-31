@@ -29,7 +29,15 @@ class CartItemCustomizationOptionHandler
 
     public function updateCustomizationOptionOnCartItem(CartItem $cartItem): void
     {
-        $options =$this->requestStack->getCurrentRequest()->get('options');
+        if (!$requestContent = json_decode($this->requestStack->getCurrentRequest()->getContent(), true)) {
+            return;
+        }
+
+        if (empty($requestContent['options'])) {
+            return;
+        }
+
+        $options = $requestContent['options'];
 
         /** @var Product[] $optionsProduct */
         $optionsProduct = $this->optionCartItemService->getOptionsByCartItem($cartItem);
@@ -72,10 +80,10 @@ class CartItemCustomizationOptionHandler
             $optionProductModel = OptionProductQuery::create()
                 ->filterById($optionId)
                 ->useProductAvailableOptionQuery()
-                    ->filterByProductId($cartItem->getProductId())
+                ->filterByProductId($cartItem->getProductId())
                 ->endUse()
                 ->useProductQuery()
-                    ->filterByRef($optionProduct->getRef())
+                ->filterByRef($optionProduct->getRef())
                 ->endUse()
                 ->findOne();
 
