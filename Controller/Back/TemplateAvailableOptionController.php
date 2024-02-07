@@ -4,7 +4,7 @@ namespace Option\Controller\Back;
 
 use Exception;
 use Option\Form\TemplateAvailableOptionForm;
-use Option\Service\OptionProduct;
+use Option\Service\OptionProductService;
 use Thelia\Controller\Admin\BaseAdminController;
 use Thelia\Core\HttpFoundation\Request;
 use Thelia\Log\Tlog;
@@ -21,7 +21,7 @@ class TemplateAvailableOptionController extends BaseAdminController
     /**
      * @Route("/set", name="_option_templates_set", methods="POST")
      */
-    public function setOptionProductOnTemplate(OptionProduct $optionProductService): Response
+    public function setOptionProductOnTemplate(OptionProductService $optionProductService): Response
     {
         $form = $this->createForm(TemplateAvailableOptionForm::class);
 
@@ -50,7 +50,7 @@ class TemplateAvailableOptionController extends BaseAdminController
     /**
      * @Route("/delete", name="_option_template_delete", methods="GET")
      */
-    public function deleteOptionProductOnTemplate( Request $request, OptionProduct $optionProductService): Response
+    public function deleteOptionProductOnTemplate(Request $request, OptionProductService $optionProductService): Response
     {
         try {
             $optionProductId = $request->get('option_product_id');

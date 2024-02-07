@@ -3,7 +3,7 @@
 namespace Option\Hook\Back;
 
 use Exception;
-use Option\Service\Option;
+use Option\Service\OptionService;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Thelia\Core\Event\Hook\HookRenderEvent;
 use Thelia\Core\Hook\BaseHook;
@@ -13,10 +13,10 @@ use TheliaSmarty\Template\SmartyParser;
 class ConfigurationHook extends BaseHook
 {
     public function __construct(
-        SmartyParser $parser,
-        AssetResolverInterface $resolver,
+        SmartyParser             $parser,
+        AssetResolverInterface   $resolver,
         EventDispatcherInterface $eventDispatcher,
-        protected Option $optionService,
+        protected OptionService  $optionService,
     )
     {
         parent::__construct($parser, $resolver, $eventDispatcher);

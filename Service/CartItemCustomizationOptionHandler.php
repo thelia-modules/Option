@@ -5,6 +5,7 @@ namespace Option\Service;
 use Exception;
 use Option\Event\OptionInputValidationEvent;
 use Option\Form\OptionFrontForm;
+use Option\Model\OptionProduct;
 use Option\Model\OptionProductQuery;
 use Option\Service\Front\OptionCartItemService;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -37,21 +38,25 @@ class CartItemCustomizationOptionHandler
 
         $options = $jsonRequest['options'];
 
-        /** @var Product[] $optionsProduct */
-        $optionsProduct = $this->optionCartItemService->getOptionsByCartItem($cartItem);
+        /** @var OptionProduct[] $optionsProduct */
+        $optionsProducts = $this->optionCartItemService->getOptionsByCartItem($cartItem);
 
-        $optionsProduct = array_filter($optionsProduct,
-            function ($optionsProduct) use ($options) {
-                if (in_array($optionsProduct->getRef(), array_keys($options))) {
+        $optionsProducts = array_filter($optionsProducts,
+            function (OptionProduct $optionsProduct) use ($options) {
+                if (in_array($optionsProduct->getProduct()->getRef(), array_keys($options))) {
                     return true;
                 }
                 return false;
             }
         );
 
-        foreach ($optionsProduct as $index => $optionProduct) {
-            $formName = $optionProduct->getRef();
-            $formData = $options[$optionProduct->getRef()];
+        /**
+         * @var int  $index
+         * @var OptionProduct $optionProduct
+         */
+        foreach ($optionsProducts as $index => $optionProduct) {
+            $formName = $optionProduct->getProduct()->getRef();
+            $formData = $options[$formName];
             try {
                 $form = $this->theliaFormFactory->createForm(
                     $formName,

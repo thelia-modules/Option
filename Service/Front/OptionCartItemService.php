@@ -7,7 +7,7 @@ use Option\Model\OptionCartItemOrderProductQuery;
 use Option\Model\OptionProduct;
 use Option\Model\ProductAvailableOption;
 use Option\Model\ProductAvailableOptionQuery;
-use Option\Service\Option;
+use Option\Service\OptionService;
 use Propel\Runtime\Exception\PropelException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -19,10 +19,10 @@ use Thelia\TaxEngine\TaxEngine;
 class OptionCartItemService
 {
     protected ?Request $request;
-    protected Option $optionService;
+    protected OptionService $optionService;
     protected TaxEngine $taxEngine;
 
-    public function __construct(RequestStack $request, Option $optionService, TaxEngine $taxEngine)
+    public function __construct(RequestStack $request, OptionService $optionService, TaxEngine $taxEngine)
     {
         $this->request = $request->getCurrentRequest();
         $this->optionService = $optionService;
@@ -73,10 +73,10 @@ class OptionCartItemService
         $totalCustomizationPrice = 0;
         $totalCustomizationPromoPrice = 0;
     
-        /** @var Product $option */
+        /** @var OptionProduct $option */
         foreach ($options as $option) {
-            $totalCustomizationPrice += $taxCalculator->getUntaxedPrice($this->optionService->getOptionTaxedPrice($option));
-            $totalCustomizationPromoPrice += $taxCalculator->getUntaxedPrice($this->optionService->getOptionTaxedPrice($option, true));
+            $totalCustomizationPrice += $taxCalculator->getUntaxedPrice($this->optionService->getOptionTaxedPrice($option->getProduct()));
+            $totalCustomizationPromoPrice += $taxCalculator->getUntaxedPrice($this->optionService->getOptionTaxedPrice($option->getProduct(), true));
         }
         
         return [
@@ -84,10 +84,7 @@ class OptionCartItemService
             'totalCustomizationPromoPrice' => $totalCustomizationPromoPrice,
         ];
     }
-    
-    /**
-     * @throws PropelException
-     */
+
     public function getOptionsByCartItem(CartItem $cartItem): array
     {
         $options = [];
@@ -96,7 +93,7 @@ class OptionCartItemService
 
         /** @var ProductAvailableOption $productAvailableOption */
         foreach ($productAvailableOptions->find() as $productAvailableOption) {
-            $options[] = $productAvailableOption->getOptionProduct()->getProduct();
+            $options[] = $productAvailableOption->getOptionProduct();
         }
 
         return $options;

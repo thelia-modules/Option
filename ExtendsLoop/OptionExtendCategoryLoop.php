@@ -3,7 +3,7 @@
 namespace Option\ExtendsLoop;
 
 use Exception;
-use Option\Service\Option;
+use Option\Service\OptionService;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Thelia\Core\Event\Loop\LoopExtendsBuildModelCriteriaEvent;
@@ -11,7 +11,7 @@ use Thelia\Core\Event\TheliaEvents;
 
 class OptionExtendCategoryLoop implements EventSubscriberInterface
 {
-    public function __construct(protected Option $optionService)
+    public function __construct(protected OptionService $optionService)
     {
     }
 

@@ -4,7 +4,7 @@ namespace Option\EventListeners;
 
 use JsonException;
 use Option\Event\OptionProductCreateEvent;
-use Option\Service\OptionProduct;
+use Option\Service\OptionProductService;
 use Option\Model\ProductAvailableOptionQuery;
 use Propel\Runtime\Exception\PropelException;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -13,9 +13,9 @@ use Thelia\Core\Event\TheliaEvents;
 
 class ProductCreationListener implements EventSubscriberInterface
 {
-    private OptionProduct $optionProductService;
+    private OptionProductService $optionProductService;
 
-    public function __construct(OptionProduct $optionProductService){
+    public function __construct(OptionProductService $optionProductService){
         $this->optionProductService = $optionProductService;
     }
 
@@ -35,7 +35,7 @@ class ProductCreationListener implements EventSubscriberInterface
         $templateOptions = $template?->getTemplateAvailableOptions();
         if($templateOptions){
             foreach ($templateOptions as $templateOption){
-                $this->optionProductService->setOptionOnProduct($newProductId, $templateOption->getOptionId(), OptionProduct::ADDED_BY_TEMPLATE);
+                $this->optionProductService->setOptionOnProduct($newProductId, $templateOption->getOptionId(), OptionProductService::ADDED_BY_TEMPLATE);
             }
         }
 
@@ -47,7 +47,7 @@ class ProductCreationListener implements EventSubscriberInterface
                 if($categoriesOptions) {
                     foreach ($categoriesOptions[0] as $categoriesOption) {
                         $this->optionProductService->setOptionOnProduct($newProductId, $categoriesOption->getOptionId
-                        (), OptionProduct::ADDED_BY_CATEGORY);
+                        (), OptionProductService::ADDED_BY_CATEGORY);
                     }
                 }
             }

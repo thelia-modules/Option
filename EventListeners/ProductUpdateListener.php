@@ -3,7 +3,7 @@
 namespace Option\EventListeners;
 
 use JsonException;
-use Option\Service\OptionProduct;
+use Option\Service\OptionProductService;
 use Propel\Runtime\Exception\PropelException;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Thelia\Core\Event\Product\ProductAddCategoryEvent;
@@ -15,9 +15,9 @@ use Thelia\Model\Base\TemplateQuery;
 
 class ProductUpdateListener implements EventSubscriberInterface
 {
-    private OptionProduct $optionProductService;
+    private OptionProductService $optionProductService;
 
-    public function __construct(OptionProduct $optionProductService){
+    public function __construct(OptionProductService $optionProductService){
         $this->optionProductService = $optionProductService;
     }
 
@@ -32,7 +32,7 @@ class ProductUpdateListener implements EventSubscriberInterface
         $categoryOptions = $category->getCategoryAvailableOptions();
         foreach ($categoryOptions as $categoryOption){
             $this->optionProductService->setOptionOnProduct($product->getId(), $categoryOption->getOptionId(),
-                OptionProduct::ADDED_BY_CATEGORY);
+                OptionProductService::ADDED_BY_CATEGORY);
         }
     }
 
@@ -62,7 +62,7 @@ class ProductUpdateListener implements EventSubscriberInterface
         foreach ($removedCategoryOptions as $categoryOption){
             if(!in_array($categoryOption->getOptionId(), $remainingOptionIds, true)){
                 $this->optionProductService->deleteOptionOnProduct($categoryOption->getOptionId(), $product->getId(),
-                    OptionProduct::ADDED_BY_CATEGORY);
+                    OptionProductService::ADDED_BY_CATEGORY);
             }
         }
     }
@@ -77,9 +77,9 @@ class ProductUpdateListener implements EventSubscriberInterface
 
         if($productOptions){
             foreach ($productOptions as $productOption){
-                if(in_array(OptionProduct::ADDED_BY_TEMPLATE, $productOption->getOptionAddedBy(), true)){
+                if(in_array(OptionProductService::ADDED_BY_TEMPLATE, $productOption->getOptionAddedBy(), true)){
                     $this->optionProductService->deleteOptionOnProduct($productOption->getOptionId(), $product->getId
-                    (), OptionProduct::ADDED_BY_TEMPLATE);
+                    (), OptionProductService::ADDED_BY_TEMPLATE);
                 }
             }
         }
@@ -87,7 +87,7 @@ class ProductUpdateListener implements EventSubscriberInterface
         $template = TemplateQuery::create()->findPk($event->getTemplateId());
         $templateOptions = $template->getTemplateAvailableOptions();
         foreach ($templateOptions as $templateOption){
-            $this->optionProductService->setOptionOnProduct($product->getId(), $templateOption->getOptionId(), OptionProduct::ADDED_BY_TEMPLATE);
+            $this->optionProductService->setOptionOnProduct($product->getId(), $templateOption->getOptionId(), OptionProductService::ADDED_BY_TEMPLATE);
         }
     }
 

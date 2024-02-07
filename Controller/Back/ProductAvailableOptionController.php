@@ -4,7 +4,7 @@ namespace Option\Controller\Back;
 
 use Exception;
 use Option\Form\ProductAvailableOptionForm;
-use Option\Service\OptionProduct;
+use Option\Service\OptionProductService;
 use Thelia\Controller\Admin\BaseAdminController;
 use Thelia\Core\HttpFoundation\Request;
 use Thelia\Log\Tlog;
@@ -31,7 +31,7 @@ class ProductAvailableOptionController extends BaseAdminController
     /**
      * @Route("/set", name="_option_product_set", methods="POST")
      */
-    public function setOptionProduct(OptionProduct $optionProductService): Response
+    public function setOptionProduct(OptionProductService $optionProductService): Response
     {
         $form = $this->createForm(ProductAvailableOptionForm::class);
 
@@ -62,7 +62,7 @@ class ProductAvailableOptionController extends BaseAdminController
      */
     public function deleteOptionProduct(
         Request       $request,
-        OptionProduct $optionProductService
+        OptionProductService $optionProductService
     ): Response
     {
         try {
@@ -75,7 +75,7 @@ class ProductAvailableOptionController extends BaseAdminController
             }
 
             $optionProductService->deleteOptionOnProduct($optionProductId, $productId,
-                OptionProduct::ADDED_BY_PRODUCT, $force);
+                OptionProductService::ADDED_BY_PRODUCT, $force);
 
         } catch (Exception $ex) {
             Tlog::getInstance()->addError($ex->getMessage());

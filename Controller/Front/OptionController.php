@@ -9,7 +9,7 @@ use OpenApi\Model\Api\ModelFactory;
 use OpenApi\OpenApi;
 use Option\Model\OptionProduct;
 use Option\Service\CartItemCustomizationOptionHandler;
-use Option\Service\Option;
+use Option\Service\OptionService;
 use Thelia\Core\HttpFoundation\JsonResponse;
 use Thelia\Core\HttpFoundation\Request;
 use Thelia\Core\Translation\Translator;
@@ -54,10 +54,10 @@ class OptionController extends BaseFrontOpenApiController
      */
     #[Route(path: '/get/{pseId}', name: '_get_option_available', methods: 'GET')]
     public function getOptionsAvailable(
-        Option       $optionService,
-        Request      $request,
-        ModelFactory $modelFactory,
-        int          $pseId
+        OptionService $optionService,
+        Request       $request,
+        ModelFactory  $modelFactory,
+        int           $pseId
     ): JsonResponse
     {
         $product = ProductQuery::create()

@@ -4,7 +4,7 @@ namespace Option\Controller\Back;
 
 use Exception;
 use Option\Option;
-use Option\Service\Option as OptionService;
+use Option\Service\OptionService as OptionService;
 use Option\Service\OptionProvider;
 use Propel\Runtime\Exception\PropelException;
 use Symfony\Component\HttpFoundation\RedirectResponse;

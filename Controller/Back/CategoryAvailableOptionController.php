@@ -7,7 +7,7 @@ use Option\Model\ProductAvailableOptionQuery;
 use Thelia\Model\Base\Product;
 use Thelia\Model\Category;
 use Option\Form\CategoryAvailableOptionForm;
-use Option\Service\OptionProduct;
+use Option\Service\OptionProductService;
 use Thelia\Controller\Admin\BaseAdminController;
 use Thelia\Core\HttpFoundation\Request;
 use Thelia\Log\Tlog;
@@ -37,7 +37,7 @@ class CategoryAvailableOptionController extends BaseAdminController
     /**
      * @Route("/set", name="_option_category_set", methods="POST")
      */
-    public function setOptionProductOnCategory(Request $request, OptionProduct $optionProductService): Response
+    public function setOptionProductOnCategory(Request $request, OptionProductService $optionProductService): Response
     {
         $form = $this->createForm(CategoryAvailableOptionForm::class);
 
@@ -67,7 +67,7 @@ class CategoryAvailableOptionController extends BaseAdminController
     /**
      * @Route("/delete", name="_option_category_delete", methods="GET")
      */
-    public function deleteOptionProductOnCategory( Request $request, OptionProduct $optionProductService): Response
+    public function deleteOptionProductOnCategory(Request $request, OptionProductService $optionProductService): Response
     {
         try {
             $optionProductId = $request->get('option_product_id');
