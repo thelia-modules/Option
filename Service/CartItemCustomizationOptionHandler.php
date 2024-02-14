@@ -85,12 +85,12 @@ class CartItemCustomizationOptionHandler
                     ->filterByProductId($cartItem->getProductId())
                 ->endUse()
                 ->useProductQuery()
-                    ->filterByRef($optionProduct->getRef())
+                    ->filterByRef($optionProduct->getProduct()->getRef())
                 ->endUse()
                 ->findOne();
 
             if (!$optionProductModel) {
-                unset($optionsProduct[$index]);
+                unset($optionsProducts[$index]);
                 return;
             }
 
@@ -108,6 +108,6 @@ class CartItemCustomizationOptionHandler
             );
         }
 
-        $this->optionCartItemService->handleCartItemOptionPrice($cartItem, $optionsProduct);
+        $this->optionCartItemService->handleCartItemOptionPrice($cartItem, $optionsProducts);
     }
 }
