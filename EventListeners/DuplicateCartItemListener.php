@@ -42,7 +42,7 @@ class DuplicateCartItemListener implements EventSubscriberInterface
                 ->setCartItemOptionId($event->getNewItem()->getId())
                 ->save();
 
-            $optionsProduct[] = $option->getProductAvailableOption()->getOptionProduct()->getProduct();
+            $optionsProduct[] = $option->getProductAvailableOption()->getOptionProduct();
         }
         $this->optionCartItemService->handleCartItemOptionPrice($event->getNewItem(), $optionsProduct);
     }
