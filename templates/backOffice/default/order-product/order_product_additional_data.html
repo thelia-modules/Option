@@ -1,3 +1,10 @@
-<pre>
-    {$orderProductCustomization|@var_dump}
-</pre>
+{if $orderProductCustomization|count > 0}
+<dl class="dl-horizontal">
+    <dt>Options</dt>
+    <dd>
+        {foreach from=$orderProductCustomization item=option}
+            <div>{' - '|implode:$option}</div>
+        {/foreach}
+    </dd>
+</dl>
+{/if}

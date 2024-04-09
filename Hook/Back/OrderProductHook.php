@@ -30,15 +30,20 @@ class OrderProductHook extends BaseHook
 
         $orderProductOption = OptionCartItemOrderProductQuery::create()
             ->filterByOrderProductId($orderProductId)
-            ->findOne();
+            ->find();
         
         if (null === $orderProductOption) {
             return;
         }
 
+        $data = [];
+        foreach ($orderProductOption as $option) {
+            $data[] = json_decode($option->getCustomizationData(), true, 512, JSON_THROW_ON_ERROR);
+        }
+
         $event->add(
             $this->render('order-product/order_product_additional_data.html', [
-                "orderProductCustomization" => json_decode($orderProductOption?->getCustomizationData(), true, 512, JSON_THROW_ON_ERROR)
+                "orderProductCustomization" => $data
             ])
         );
     }
