@@ -24,7 +24,7 @@ class ProductCreationListener implements EventSubscriberInterface
      */
     public function addOptions(ProductCreateEvent $event): void
     {
-        if ($event instanceof OptionProductCreateEvent) {
+        if (!$event instanceof OptionProductCreateEvent) {
             return;
         }
 

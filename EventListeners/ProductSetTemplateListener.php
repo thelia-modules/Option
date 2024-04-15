@@ -13,7 +13,8 @@ class ProductSetTemplateListener implements EventSubscriberInterface
 {
     private OptionProductService $optionProductService;
 
-    public function __construct(OptionProductService $optionProductService){
+    public function __construct(OptionProductService $optionProductService)
+    {
         $this->optionProductService = $optionProductService;
     }
 
@@ -23,10 +24,13 @@ class ProductSetTemplateListener implements EventSubscriberInterface
     public function addOptions(ProductSetTemplateEvent $event): void
     {
         $product = $event->getProduct();
-        $template = $product->getTemplate();
+
+        if (!$template = $product->getTemplate()) {
+            return;
+        }
 
         $templateOptions = $template->getTemplateAvailableOptions();
-        foreach ($templateOptions as $templateOption){
+        foreach ($templateOptions as $templateOption) {
             $this->optionProductService->setOptionOnProduct($product->getId(), $templateOption->getOptionId(), OptionProductService::ADDED_BY_TEMPLATE);
         }
     }
