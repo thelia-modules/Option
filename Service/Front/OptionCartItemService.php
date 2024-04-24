@@ -2,6 +2,8 @@
 
 namespace Option\Service\Front;
 
+use Option\Event\OptionUpdatePriceEvent;
+use Option\Event\RemoveOptionUpdatePriceEvent;
 use Option\Model\OptionCartItemOrderProduct;
 use Option\Model\OptionCartItemOrderProductQuery;
 use Option\Model\OptionProduct;
@@ -11,22 +13,23 @@ use Option\Service\OptionService;
 use Propel\Runtime\Exception\PropelException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Thelia\Model\CartItem;
-use Thelia\Model\Product;
 use Thelia\TaxEngine\Calculator;
 use Thelia\TaxEngine\TaxEngine;
 
 class OptionCartItemService
 {
     protected ?Request $request;
-    protected OptionService $optionService;
-    protected TaxEngine $taxEngine;
 
-    public function __construct(RequestStack $request, OptionService $optionService, TaxEngine $taxEngine)
+    public function __construct(
+        protected EventDispatcherInterface $dispatcher,
+        protected OptionService $optionService,
+        protected TaxEngine $taxEngine,
+        RequestStack $request
+    )
     {
         $this->request = $request->getCurrentRequest();
-        $this->optionService = $optionService;
-        $this->taxEngine = $taxEngine;
     }
 
     /**
@@ -37,13 +40,20 @@ class OptionCartItemService
     {
         $totalCustoms = $this->calculateTotalCustomPrice($cartItem, $options);
 
+        $event = new OptionUpdatePriceEvent();
+        $event
+            ->setCartItem($cartItem)
+            ->setTotalCustoms($totalCustoms);
+
+        $this->dispatcher->dispatch($event, OptionUpdatePriceEvent::OPTION_UPDATE_PRICE);
+
         $cartItem
             ->setPrice((float)$cartItem->getPrice() + $totalCustoms['totalCustomizationPrice'])
             ->setPromoPrice((float)$cartItem->getPromoPrice() + $totalCustoms['totalCustomizationPrice'])
             ->save()
         ;
     }
-    
+
     /**
      * @param CartItem $cartItem
      * @throws PropelException
@@ -51,13 +61,20 @@ class OptionCartItemService
     public function removeCartItemOptionPrice(CartItem $cartItem): void
     {
         $totalCustoms = $this->calculateTotalCustomPrice($cartItem);
-        
+
+        $event = new RemoveOptionUpdatePriceEvent();
+        $event
+            ->setCartItem($cartItem)
+            ->setTotalCustoms($totalCustoms);
+
+        $this->dispatcher->dispatch($event, RemoveOptionUpdatePriceEvent::REMOVE_OPTION_UPDATE_PRICE);
+
         $cartItem
             ->setPrice((float)$cartItem->getPrice() - $totalCustoms['totalCustomizationPrice'])
             ->setPromoPrice((float)$cartItem->getPromoPrice() - $totalCustoms['totalCustomizationPromoPrice'])
             ->save();
     }
-    
+
     /**
      * @throws PropelException
      */
@@ -66,19 +83,19 @@ class OptionCartItemService
         if(!$options){
             $options = $this->getOptionsByCartItem($cartItem);
         }
-    
+
         // Calculate option HT price with cartItem tax rule.
         $taxCalculator = $this->getTaxCalculator($cartItem);
-    
+
         $totalCustomizationPrice = 0;
         $totalCustomizationPromoPrice = 0;
-    
+
         /** @var OptionProduct $option */
         foreach ($options as $option) {
             $totalCustomizationPrice += $taxCalculator->getUntaxedPrice($this->optionService->getOptionTaxedPrice($option->getProduct()));
             $totalCustomizationPromoPrice += $taxCalculator->getUntaxedPrice($this->optionService->getOptionTaxedPrice($option->getProduct(), true));
         }
-        
+
         return [
             'totalCustomizationPrice' => $totalCustomizationPrice,
             'totalCustomizationPromoPrice' => $totalCustomizationPromoPrice,
@@ -108,11 +125,11 @@ class OptionCartItemService
             ->filterByProductId($cartItem->getProductId())
             ->filterByOptionId($optionProduct->getId())
             ->findOne();
-      
+
         if (null === $productAvailableOption) {
             return;
         }
-        
+
         $optionCartItem = OptionCartItemOrderProductQuery::create()
             ->filterByProductAvailableOptionId($productAvailableOption->getId())
             ->filterByCartItemOptionId($cartItem->getId())->findOne();
