@@ -138,8 +138,7 @@ class OptionService
         return false === $event->isValid() ? [] : $event->getOptions();
     }
 
-
-    public function getOptionTaxedPrice(Product $option, bool $isPromo = false): float|int
+    public function getOptionPrice(Product $option, bool $isPromo = false, $isTaxed = true): float|int
     {
         $taxCountry = $this->taxEngine->getDeliveryCountry();
         $taxState = $this->taxEngine->getDeliveryState();
@@ -153,6 +152,21 @@ class OptionService
             $optionPrice = $optionPseProductPrice->getPromoPrice();
         }
 
+        if (!$isTaxed) {
+            return $optionPrice;
+        }
+
         return $option->getTaxedPrice($taxCountry, $optionPrice, $taxState);
+    }
+
+    public function getOptionTaxedPrice(Product $option, bool $isPromo = false): float|int
+    {
+        return $this->getOptionPrice($option, $isPromo);
+    }
+
+
+    public function getOptionUnTaxedPrice(Product $option, bool $isPromo = false): float|int
+    {
+        return $this->getOptionPrice($option, $isPromo, false);
     }
 }
