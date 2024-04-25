@@ -84,7 +84,8 @@ class OptionController extends BaseFrontOpenApiController
                     'title' => $option->getProduct()->setLocale($locale)->getTitle(),
                     'id' => $option->getId(),
                     'code' => $option->getProduct()?->getRef(),
-                    'price' => round($optionService->getOptionTaxedPrice($option->getProduct()), 2)
+                    'price' => round($optionService->getOptionTaxedPrice($option->getProduct()), 2),
+                    'untaxedPrice' => round($optionService->getOptionUnTaxedPrice($option->getProduct()), 2)
                 ]
             );
         }

@@ -42,6 +42,13 @@ class Option extends BaseApiModel
      */
     protected float $price;
 
+    /**
+     * @OA\Property(
+     *    type="float"
+     * )
+     */
+    protected float $untaxedPrice;
+
     public function getId(): int
     {
         return $this->id;
@@ -80,5 +87,17 @@ class Option extends BaseApiModel
     public function setPrice(float $price): void
     {
         $this->price = $price;
+    }
+
+    public function getUntaxedPrice(): float
+    {
+        return $this->untaxedPrice;
+    }
+
+    public function setUntaxedPrice(float $untaxedPrice): Option
+    {
+        $this->untaxedPrice = $untaxedPrice;
+
+        return $this;
     }
 }
