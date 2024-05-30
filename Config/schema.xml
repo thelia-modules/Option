@@ -100,7 +100,7 @@
 
     <table name="option_cart_item_order_product" namespace="Option\Model">
         <column autoIncrement="true" name="id" primaryKey="true" required="true" type="INTEGER" />
-        <column name="product_available_option_id" type="INTEGER" required="true"/>
+        <column name="product_available_option_id" type="INTEGER"/>
         <column name="cart_item_option_id" type="INTEGER" required="false"/>
         <column name="order_product_id" type="INTEGER" required="false"/>
         <column name="option_order_product_id" type="INTEGER" required="false"/>
@@ -113,7 +113,7 @@
             <reference foreign="id" local="cart_item_option_id" />
         </foreign-key>
 
-        <foreign-key foreignTable="product_available_option" name="fk_option_cart_item_order_product_paoid" onDelete="CASCADE">
+        <foreign-key foreignTable="product_available_option" name="fk_option_cart_item_order_product_paoid" onDelete="SET NULL">
             <reference foreign="id" local="product_available_option_id" />
         </foreign-key>
 

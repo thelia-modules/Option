@@ -4,18 +4,23 @@ namespace Option\EventListeners;
 
 use JsonException;
 use Option\Event\OptionProductCreateEvent;
+use Option\Model\CategoryAvailableOption;
 use Option\Service\OptionProductService;
 use Option\Model\ProductAvailableOptionQuery;
 use Propel\Runtime\Exception\PropelException;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Thelia\Core\Event\Product\ProductCreateEvent;
 use Thelia\Core\Event\TheliaEvents;
+use Thelia\Model\Category;
+use Thelia\Model\CategoryQuery;
+use Thelia\Model\ProductCategoryQuery;
 
 class ProductCreationListener implements EventSubscriberInterface
 {
     private OptionProductService $optionProductService;
 
-    public function __construct(OptionProductService $optionProductService){
+    public function __construct(OptionProductService $optionProductService)
+    {
         $this->optionProductService = $optionProductService;
     }
 
@@ -29,34 +34,36 @@ class ProductCreationListener implements EventSubscriberInterface
         }
 
         $newProduct = $event->getProduct();
+
+        // Option creation, skip
+        if ($newProduct->getOptionProducts()) {
+            return;
+        }
+
         $newProductId = $newProduct->getId();
-
         $template = $newProduct->getTemplate();
-        $templateOptions = $template?->getTemplateAvailableOptions();
-        if($templateOptions){
-            foreach ($templateOptions as $templateOption){
-                $this->optionProductService->setOptionOnProduct($newProductId, $templateOption->getOptionId(), OptionProductService::ADDED_BY_TEMPLATE);
+
+        if ($templateOptions = $template?->getTemplateAvailableOptions()) {
+            foreach ($templateOptions as $templateOption) {
+                $this->optionProductService->setOptionOnProduct(
+                    $newProductId,
+                    $templateOption->getOptionId(),
+                    OptionProductService::ADDED_BY_TEMPLATE
+                );
             }
         }
 
-        $productCategories = $newProduct->getCategories();
-        if($productCategories) {
-            $categoriesOptions = [];
-            foreach ($productCategories as $category) {
-                $categoriesOptions[] = $category->getCategoryAvailableOptions();
-                if($categoriesOptions) {
-                    foreach ($categoriesOptions[0] as $categoriesOption) {
-                        $this->optionProductService->setOptionOnProduct($newProductId, $categoriesOption->getOptionId
-                        (), OptionProductService::ADDED_BY_CATEGORY);
-                    }
-                }
-            }
+        if (!$category = CategoryQuery::create()->filterById($newProduct->getDefaultCategoryId())->findOne()) {
+            return;
         }
 
-        ProductAvailableOptionQuery::create()
-            ->filterByProductId($newProductId)
-            ->findOneOrCreate()
-            ->save();
+        foreach ($this->getCategoryAvailableOptions($category) as $categoryAvailableOption) {
+            $this->optionProductService->setOptionOnProduct(
+                $newProductId,
+                $categoryAvailableOption->getOptionId(),
+                OptionProductService::ADDED_BY_CATEGORY
+            );
+        }
     }
 
     public static function getSubscribedEvents(): array
@@ -64,5 +71,21 @@ class ProductCreationListener implements EventSubscriberInterface
         return [
             TheliaEvents::PRODUCT_CREATE => ['addOptions', 50],
         ];
+    }
+
+    /**
+     * @return CategoryAvailableOption[] array
+     */
+    protected function getCategoryAvailableOptions(Category $category): array
+    {
+        if ($category->getCategoryAvailableOptions()) {
+            return iterator_to_array($category->getCategoryAvailableOptions());
+        }
+
+        if ($categoryParent = CategoryQuery::create()->filterById($category->getParent())->findOne()) {
+            return $this->getCategoryAvailableOptions($categoryParent);
+        }
+
+        return [];
     }
 }

@@ -113,7 +113,7 @@ DROP TABLE IF EXISTS `option_cart_item_order_product`;
 CREATE TABLE `option_cart_item_order_product`
 (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `product_available_option_id` INTEGER NOT NULL,
+    `product_available_option_id` INTEGER,
     `cart_item_option_id` INTEGER,
     `order_product_id` INTEGER,
     `option_order_product_id` INTEGER,
@@ -133,7 +133,7 @@ CREATE TABLE `option_cart_item_order_product`
     CONSTRAINT `fk_option_cart_item_order_product_paoid`
         FOREIGN KEY (`product_available_option_id`)
         REFERENCES `product_available_option` (`id`)
-        ON DELETE CASCADE,
+        ON DELETE SET NULL,
     CONSTRAINT `fk_option_cart_item_order_product_opid`
         FOREIGN KEY (`order_product_id`)
         REFERENCES `order_product` (`id`)
