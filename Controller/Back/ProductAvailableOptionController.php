@@ -41,6 +41,12 @@ class ProductAvailableOptionController extends BaseAdminController
 
             $optionProductService->setOptionOnProduct($data['product_id'], $data['option_id'], $optionProductService::ADDED_BY_PRODUCT);
 
+            $optionProductService->setOptionProductPrice(
+                $data['product_id'],
+                $data['option_id'],
+                $data['option_price']?:null
+            );
+
             return $this->generateSuccessRedirect($form);
         } catch (Exception $ex) {
             $errorMessage = $ex->getMessage();
@@ -61,7 +67,7 @@ class ProductAvailableOptionController extends BaseAdminController
      * @Route("/delete", name="_option_product_delete", methods="GET")
      */
     public function deleteOptionProduct(
-        Request       $request,
+        Request              $request,
         OptionProductService $optionProductService
     ): Response
     {

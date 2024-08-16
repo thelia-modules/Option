@@ -34,6 +34,8 @@ CREATE TABLE `product_available_option`
     `product_id` INTEGER NOT NULL,
     `option_id` INTEGER NOT NULL,
     `option_added_by` JSON,
+    `option_price` DECIMAL(16,6) DEFAULT 0.000000,
+    `option_promo_price` DECIMAL(16,6) DEFAULT 0.000000,
     PRIMARY KEY (`id`),
     UNIQUE INDEX `product_available_option_UNIQUE` (`product_id`, `option_id`),
     INDEX `idx_product_available_option_product_id` (`product_id`),

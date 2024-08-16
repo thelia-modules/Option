@@ -5,6 +5,7 @@ namespace Option\Service;
 use JsonException;
 use Option\Model\CategoryAvailableOptionQuery;
 use Option\Model\OptionProductQuery;
+use Option\Model\ProductAvailableOption;
 use Option\Model\ProductAvailableOptionQuery;
 use Option\Model\TemplateAvailableOptionQuery;
 use Propel\Runtime\Exception\PropelException;
@@ -51,6 +52,31 @@ class OptionProductService
             ->filterByOptionId($option->getId())
             ->findOneOrCreate()
             ->setOptionAddedBy(json_encode($newAddedBy, JSON_THROW_ON_ERROR))
+            ->save();
+    }
+
+    public function setOptionProductPrice(
+        int   $productId,
+        int   $optionId,
+        ?float $price,
+        ?float $promoPrice = null
+    ): void
+    {
+        $product = ProductQuery::create()->findPk($productId);
+        $option = OptionProductQuery::create()->findPk($optionId);
+
+        $productAvailableOption = ProductAvailableOptionQuery::create()
+            ->filterByProductId($product->getId())
+            ->filterByOptionId($option->getId())
+            ->findOne();
+
+        if (!$productAvailableOption) {
+            return;
+        }
+
+        $productAvailableOption
+            ->setOptionPrice($price)
+            ->setOptionPromoPrice($promoPrice)
             ->save();
     }
 

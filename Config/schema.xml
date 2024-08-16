@@ -17,6 +17,8 @@
         <column name="product_id" required="true" type="INTEGER" />
         <column name="option_id" required="true" type="INTEGER" />
         <column name="option_added_by" type="JSON" />
+        <column name="option_price" scale="6" size="16" type="DECIMAL" defaultValue="0.000000" />
+        <column name="option_promo_price" scale="6" size="16" type="DECIMAL" defaultValue="0.000000" />
 
         <foreign-key foreignTable="product" name="fk_product_available_option_product_id" onDelete="CASCADE" onUpdate="RESTRICT">
             <reference foreign="id" local="product_id" />

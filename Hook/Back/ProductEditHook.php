@@ -18,8 +18,19 @@ class ProductEditHook extends BaseHook
                     "type" => "back",
                     "method" => "onProductTab"
                 ]
+            ],
+            "product.edit-js" => [
+                [
+                    "type" => "back",
+                    "method" => "onProductEditJs"
+                ]
             ]
         ];
+    }
+
+    public function onProductEditJs(HookRenderEvent $event): void
+    {
+        $event->add($this->render("product/include/update-price.html"));
     }
 
     public function onProductTab(HookRenderBlockEvent $event): void

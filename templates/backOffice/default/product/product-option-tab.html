@@ -18,7 +18,72 @@
             <div class="row" style="display: flex; align-items: center">
                 <div class="col-md-8">
                     <h3>{$TITLE} - {$REF}</h3>
-                    <h3 style="color: #FF9805">{format_money number=$BEST_TAXED_PRICE}</h3>
+                    <div>
+                        {form name="product_available_option_form"}
+                            <form method="POST" action="{url path='/admin/option/product/set'}" id="option-product-form-{$CURENT_OPTION_ID}">
+                                {form_hidden_fields form=$form}
+
+                                {form_field field="error_url"}
+                                    <input type="hidden" name="{$name}" value="{url path='/admin/products/update' current_tab="product_option_tab" product_id=$product_id}"/>
+                                {/form_field}
+
+                                {form_field field="success_url"}
+                                    <input type="hidden" name="{$name}" value="{url path='/admin/products/update' current_tab="product_option_tab" success=1 product_id=$product_id}"/>
+                                {/form_field}
+
+                                {form_field field="product_id"}
+                                    <input type="hidden" name="{$name}" value="{$product_id}"/>
+                                {/form_field}
+
+                                {form_field field="option_id"}
+                                    <input type="hidden" name="{$name}" value="{$CURENT_OPTION_ID}"/>
+                                {/form_field}
+
+                                {if $form_error && !$success|default:0}
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="alert alert-danger">{$form_error_message}</div>
+                                        </div>
+                                    </div>
+                                {/if}
+
+                                {if $success|default:0}
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="success">{intl d='option.bo.default' l="Option mise à jour avec succès"}</div>
+                                        </div>
+                                    </div>
+                                {/if}
+                                <div id="optionPriceContainer" class="row">
+                                    <div class="col-md-6">
+                                        {form_field field='option_price'}
+                                            <div class="form-group {if $error}has-error{/if}">
+                                                <label for="option-price-without-tax-modal-{$CURENT_OPTION_ID}" class="control-label">{$label} : </label>
+
+                                                <div class="input-group">
+                                                    <input type="text" id="option-price-without-tax-modal-{$CURENT_OPTION_ID}" data-price-type="option-price-without-tax-modal-{$CURENT_OPTION_ID}" data-rel-price="option-price-with-tax-modal-{$CURENT_OPTION_ID}" name="{$name}" class="price_field automatic_price_field form-control" value="{if $value}{$value}{else}{if !$OPTION_PRICE}{$BEST_TAXED_PRICE}{else}{$OPTION_PRICE}{/if}{/if}" title="{$label}" placeholder="{intl l='Price excl. taxes'}">
+                                                    <span class="input-group-addon">€</span>
+                                                </div>
+                                            </div>
+                                        {/form_field}
+
+                                        <div class="form-group">
+                                            <label for="option-price-with-tax-modal-{$CURENT_OPTION_ID}" class="control-label">{intl l="Product price including taxes"} : </label>
+                                            <div class="input-group">
+                                                <input type="text" id="option-price-with-tax-modal-{$CURENT_OPTION_ID}" data-price-type="option-price-with-tax-modal-{$CURENT_OPTION_ID}" data-rel-price="option-price-without-tax-modal-{$CURENT_OPTION_ID}" class="price_field automatic_price_field form-control" value="" title="{intl l='Product price including taxes'}" placeholder="{intl l='Price incl. taxes'}">
+                                                <span class="input-group-addon">€</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <button type="submit" id="resetOptionPrice" data-option-id="{$CURENT_OPTION_ID}">{intl d='option.bo.default' l="Reset option price"}</button>
+                                        <button type="submit">{intl d='option.bo.default' l="Save option price"}</button>
+                                    </div>
+                                </div>
+
+                            </form>
+                        {/form}
+                    </div>
                 </div>
                 <div class="col-md-4">
                     <a class="btn btn-danger pull-right modal-open" id="delete" role="button"

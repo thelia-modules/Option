@@ -1,0 +1,63 @@
+<script>
+    $(document).ready(function() {
+        function update_price(price, price_type, dest_field_id) {
+            var tax_rule_id = $('#tax_rule_field').val();
+
+            var operation;
+
+            if (price_type.indexOf('with-tax') != -1)
+                operation = 'from_tax';
+            else if (price_type.indexOf('without-tax') != -1)
+                operation = 'to_tax';
+            else
+                operation = '';
+
+            $.ajax({
+                url: '{url path="/admin/product/calculate-price"}',
+                data: {
+                    price: price,
+                    action: operation,
+                    product_id: {$product_id}
+                },
+                type: 'get',
+                dataType: 'json',
+                success: function (json) {
+                    $('.catalog').find('#' + dest_field_id).val(json.result);
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    alert("{intl l='Failed to get prices. Please try again.'} (" + errorThrown + ")");
+                }
+            });
+        }
+
+        $('.catalog').on('input', '#optionPriceContainer .automatic_price_field', function () {
+            var price = $(this).val();
+            $(this).val(price.replace(",", "."));
+            update_price($(this).val(), $(this).data('price-type'), $(this).data('rel-price'));
+        });
+
+        $('.catalog').on('click', '#optionPriceContainer #resetOptionPrice', function (e) {
+            e.preventDefault();
+            console.log($(this).data('option-id'));
+            $('#option-price-with-tax-modal-' + $(this).data('option-id')).val(null);
+            $('#option-price-without-tax-modal-' + $(this).data('option-id')).val(null);
+            $('#option-product-form-' + $(this).data('option-id')).submit();
+        });
+
+        var observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.addedNodes.length) {
+                    $(mutation.addedNodes).find('.automatic_price_field').each(function() {
+                        if($(this).data('price-type')?.indexOf('without-tax') !== -1){
+                            var price = $(this).val();
+                            $(this).val(price.replace(",", "."));
+                            update_price($(this).val(), $(this).data('price-type'), $(this).data('rel-price'));
+                        }
+                    });
+                }
+            });
+        });
+
+        observer.observe(document.querySelector('.catalog'), { childList: true, subtree: true });
+    });
+</script>

@@ -6,6 +6,7 @@ use Option\Model\Map\OptionProductTableMap;
 use Option\Option;
 use Propel\Runtime\Exception\PropelException;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\MoneyType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Thelia\Form\BaseForm;
@@ -17,7 +18,7 @@ class ProductAvailableOptionForm extends BaseForm
     /**
      * @throws PropelException
      */
-    protected function buildForm() : void
+    protected function buildForm(): void
     {
         $this->formBuilder
             ->add(
@@ -37,10 +38,24 @@ class ProductAvailableOptionForm extends BaseForm
                     'choices' => $this->getOptionChoices(),
                     'label' => $this->translator->trans('Options', [], Option::DOMAIN_NAME)
                 ]
+            )
+            ->add(
+                'option_price',
+                MoneyType::class,
+                [
+                    'label' => $this->translator->trans('Price', [], Option::DOMAIN_NAME)
+                ]
+            )
+            ->add(
+                'option_promo_price',
+                MoneyType::class,
+                [
+                    'label' => $this->translator->trans('Promo price', [], Option::DOMAIN_NAME)
+                ]
             );
     }
 
-    public static function getName() : string
+    public static function getName(): string
     {
         return "product_available_option_form";
     }
@@ -52,7 +67,7 @@ class ProductAvailableOptionForm extends BaseForm
     {
         $data = [];
         $options = ProductQuery::create()->useOptionProductQuery()
-                ->withColumn(OptionProductTableMap::COL_ID,  'option_id')
+            ->withColumn(OptionProductTableMap::COL_ID, 'option_id')
             ->endUse()
             ->find();
 
