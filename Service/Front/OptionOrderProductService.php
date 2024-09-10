@@ -161,8 +161,8 @@ class OptionOrderProductService
         $this->updateCustomizationData($orderProduct->getId(), $customization);
 
         return [
-            $untaxedPrice * $orderProductMasterQuantity,
-            $VAT * $orderProductMasterQuantity
+            $untaxedPrice,
+            $VAT
         ];
     }
 
