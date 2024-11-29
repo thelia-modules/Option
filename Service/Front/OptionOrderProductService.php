@@ -78,16 +78,19 @@ class OptionOrderProductService
         }
 
         $orderProductUntaxedPrice = $orderProduct->getPrice();
+        $orderProductUntaxedPromoPrice = $orderProduct->getPromoPrice();
 
         if ($orderProductTax) {
             $orderProductTaxAmount = $orderProductTax->getAmount();
+            $orderProductTaxAmountPromo = $orderProductTax->getPromoAmount();
             $orderProductTax
                 ->setAmount($orderProductTaxAmount - $totalCustomizationVAT)
+                ->setPromoAmount($orderProductTaxAmountPromo - $totalCustomizationVAT)
                 ->save();
         }
-
         $orderProduct
             ->setPrice($orderProductUntaxedPrice - $totalCustomizationUntaxedPrice)
+            ->setPromoPrice($orderProductUntaxedPromoPrice - $totalCustomizationUntaxedPrice)
             ->save();
     }
 
