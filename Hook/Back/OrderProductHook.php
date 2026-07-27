@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Option\Hook\Back;
 
 use Option\Model\OptionCartItemOrderProductQuery;
@@ -37,8 +39,8 @@ class OrderProductHook extends BaseHook
         }
 
         $event->add(
-            $this->render('order-product/order_product_additional_data.html', [
-                "orderProductCustomization" => json_decode($orderProductOption?->getCustomizationData(), true, 512, JSON_THROW_ON_ERROR)
+            $this->render('Option/order-product/order_product_additional_data.html.twig', [
+                "orderProductCustomization" => json_decode($orderProductOption->getCustomizationData(), true, 512, JSON_THROW_ON_ERROR)
             ])
         );
     }

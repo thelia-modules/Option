@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Option\Event;
 
 use Option\Model\OptionProduct;
@@ -21,7 +23,7 @@ class RemoveOptionUpdatePriceEvent extends ActionEvent
         return $this->cartItem;
     }
 
-    public function setCartItem(CartItem $cartItem): OptionUpdatePriceEvent
+    public function setCartItem(CartItem $cartItem): self
     {
         $this->cartItem = $cartItem;
         return $this;
@@ -32,7 +34,7 @@ class RemoveOptionUpdatePriceEvent extends ActionEvent
         return $this->totalCustoms;
     }
 
-    public function setTotalCustoms(array $totalCustoms): OptionUpdatePriceEvent
+    public function setTotalCustoms(array $totalCustoms): self
     {
         $this->totalCustoms = $totalCustoms;
         return $this;

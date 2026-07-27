@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Option\Api\Resource;
 
 use ApiPlatform\Metadata\Operation;
@@ -69,7 +71,7 @@ class ProductAvailableOption implements ResourceAddonInterface
     /**
      * @param ProductQuery $query
      */
-    public static function extendQuery(ModelCriteria $query, Operation $operation = null, array $context = []): void
+    public static function extendQuery(ModelCriteria $query, ?Operation $operation = null, array $context = []): void
     {
         $query->useProductAvailableOptionQuery(joinType: Criteria::LEFT_JOIN)
                 ->useOptionProductQuery(joinType: Criteria::LEFT_JOIN)

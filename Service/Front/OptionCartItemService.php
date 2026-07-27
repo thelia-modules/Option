@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Option\Service\Front;
 
 use Option\Event\OptionUpdatePriceEvent;
@@ -15,8 +17,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Thelia\Model\CartItem;
-use Thelia\TaxEngine\Calculator;
-use Thelia\TaxEngine\TaxEngine;
+use Thelia\Domain\Taxation\TaxEngine\Calculator;
+use Thelia\Domain\Taxation\TaxEngine\TaxEngine;
 
 class OptionCartItemService
 {
@@ -48,8 +50,8 @@ class OptionCartItemService
         $this->dispatcher->dispatch($event, OptionUpdatePriceEvent::OPTION_UPDATE_PRICE);
 
         $cartItem
-            ->setPrice((float)$cartItem->getPrice() + $totalCustoms['totalCustomizationPrice'])
-            ->setPromoPrice((float)$cartItem->getPromoPrice() + $totalCustoms['totalCustomizationPrice'])
+            ->setPrice((string)((float)$cartItem->getPrice() + $totalCustoms['totalCustomizationPrice']))
+            ->setPromoPrice((string)((float)$cartItem->getPromoPrice() + $totalCustoms['totalCustomizationPrice']))
             ->save()
         ;
     }
@@ -70,15 +72,15 @@ class OptionCartItemService
         $this->dispatcher->dispatch($event, RemoveOptionUpdatePriceEvent::REMOVE_OPTION_UPDATE_PRICE);
 
         $cartItem
-            ->setPrice((float)$cartItem->getPrice() - $totalCustoms['totalCustomizationPrice'])
-            ->setPromoPrice((float)$cartItem->getPromoPrice() - $totalCustoms['totalCustomizationPromoPrice'])
+            ->setPrice((string)((float)$cartItem->getPrice() - $totalCustoms['totalCustomizationPrice']))
+            ->setPromoPrice((string)((float)$cartItem->getPromoPrice() - $totalCustoms['totalCustomizationPromoPrice']))
             ->save();
     }
 
     /**
      * @throws PropelException
      */
-    public function calculateTotalCustomPrice(Cartitem $cartItem, array $options = []): array
+    public function calculateTotalCustomPrice(CartItem $cartItem, array $options = []): array
     {
         if(!$options){
             $options = $this->getOptionsByCartItem($cartItem);
@@ -153,10 +155,10 @@ class OptionCartItemService
         $untaxedPrice = $taxCalculator->getUntaxedPrice($price);
 
         $optionCartItem
-            ->setPrice($untaxedPrice)
-            ->setTaxedPrice($price)
+            ->setPrice((string) $untaxedPrice)
+            ->setTaxedPrice((string) $price)
             ->setCustomizationData(json_encode($customization))
-            ->setQuantity($cartItem->getQuantity())
+            ->setQuantity((string) $cartItem->getQuantity())
             ->save();
     }
 

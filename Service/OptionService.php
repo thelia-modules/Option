@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Option\Service;
 
 use Exception;
@@ -17,7 +19,7 @@ use Thelia\Model\Category;
 use Thelia\Model\CategoryQuery;
 use Thelia\Model\Product;
 use Thelia\Model\ProductPrice;
-use Thelia\TaxEngine\TaxEngine;
+use Thelia\Domain\Taxation\TaxEngine\TaxEngine;
 
 /**
  *
@@ -98,7 +100,7 @@ class OptionService
 
             $optionCategory->save();
 
-            OptionModule::setConfigValue(OptionModule::OPTION_CATEGORY_ID, $optionCategory->getId());
+            OptionModule::setConfigValue(OptionModule::OPTION_CATEGORY_ID, (string) $optionCategory->getId());
             return $optionCategory;
 
         } catch (Exception $ex) {
@@ -153,7 +155,7 @@ class OptionService
         }
 
         if (!$isTaxed) {
-            return $optionPrice;
+            return (float) $optionPrice;
         }
 
         return $option->getTaxedPrice($taxCountry, $optionPrice, $taxState);

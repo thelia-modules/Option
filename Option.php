@@ -1,12 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Option;
 
-use Option\Model\OptionProductQuery;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurator;
 use Symfony\Component\Finder\Finder;
-use Thelia\Install\Database;
+use Thelia\Core\Install\Database;
 use Thelia\Module\BaseModule;
 
 class Option extends BaseModule
@@ -20,18 +21,18 @@ class Option extends BaseModule
     /** @var string  */
     const OPTION_CATEGORY_ID = 'option_category_id_thelia';
 
-    public function postActivation(ConnectionInterface $con = null): void
+    public function postActivation(?ConnectionInterface $con = null): void
     {
-        if (!$this->getConfigValue('is_initialized', false)) {
+        if (!$this->getConfigValue('is_initialized')) {
             $database = new Database($con);
 
             $database->insertSql(null, array(__DIR__ . '/Config/TheliaMain.sql'));
 
-            $this->setConfigValue('is_initialized', true);
+            $this->setConfigValue('is_initialized', '1');
         }
     }
 
-    public function update($currentVersion, $newVersion, ConnectionInterface $con = null): void
+    public function update($currentVersion, $newVersion, ?ConnectionInterface $con = null): void
     {
         $finder = (new Finder())
             ->files()
@@ -62,7 +63,7 @@ class Option extends BaseModule
     public static function configureServices(ServicesConfigurator $servicesConfigurator): void
     {
         $servicesConfigurator->load(self::getModuleCode().'\\', __DIR__)
-            ->exclude([THELIA_MODULE_DIR . ucfirst(self::getModuleCode()). "/I18n/*"])
+            ->exclude([__DIR__.'/I18n/*'])
             ->autowire(true)
             ->autoconfigure(true);
     }

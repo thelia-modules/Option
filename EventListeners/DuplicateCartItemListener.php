@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Option\EventListeners;
 
 use Option\Model\OptionCartItemOrderProduct;

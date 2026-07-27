@@ -1,0 +1,152 @@
+{# Option module configuration page — list of option-products + create/delete (BO twig). #}
+{% set d = 'option.bo.default' %}
+{% set token = attribute(creationForm, '_token') %}
+
+<div class="option-configuration">
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>{{ 'Paid options'|trans({}, d) }}</span>
+            {% if is_granted('CREATE', {resource: 'admin.module', module: 'Option'}) %}
+                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#option-create-modal">
+                    <i class="bi bi-plus-lg"></i> {{ 'Add a new option'|trans({}, d) }}
+                </button>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% if options|length %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-sm align-middle">
+                        <thead>
+                            <tr>
+                                <th>{{ 'ID'|trans({}, d) }}</th>
+                                <th>{{ 'Reference'|trans({}, d) }}</th>
+                                <th>{{ 'Product title'|trans({}, d) }}</th>
+                                <th class="text-end">{{ 'Price'|trans({}, d) }}</th>
+                                <th class="text-center">{{ 'Online'|trans({}, d) }}</th>
+                                <th class="text-end">{{ 'Actions'|trans({}, d) }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for option in options %}
+                                <tr>
+                                    <td>{{ option.id }}</td>
+                                    <td>
+                                        <a href="{{ path('admin_option_update_option_view', {option_id: option.id}) }}">{{ option.ref }}</a>
+                                    </td>
+                                    <td>
+                                        <a href="{{ path('admin_option_update_option_view', {option_id: option.id}) }}">{{ option.title }}</a>
+                                    </td>
+                                    <td class="text-end">
+                                        {{ option.price is not null ? (option.price|number_format(2, '.', ' ') ~ ' ' ~ currency_symbol) : '—' }}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if option.visible %}
+                                            <i class="bi bi-check-circle-fill text-success"></i>
+                                        {% else %}
+                                            <i class="bi bi-x-circle-fill text-danger"></i>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end text-nowrap">
+                                        <a href="{{ path('admin_option_update_option_view', {option_id: option.id}) }}"
+                                           class="btn btn-outline-secondary btn-sm" title="{{ 'Edit this option'|trans({}, d) }}">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        {% if is_granted('DELETE', {resource: 'admin.module', module: 'Option'}) %}
+                                            <button type="button" class="btn btn-danger btn-sm js-option-delete"
+                                                    data-id="{{ option.id }}" data-bs-toggle="modal" data-bs-target="#option-delete-modal"
+                                                    title="{{ 'Delete this option'|trans({}, d) }}">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info mb-0">
+                    {{ "This module doesn't contain any option yet. Click the button above to add one."|trans({}, d) }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# Create modal #}
+    {% if is_granted('CREATE', {resource: 'admin.module', module: 'Option'}) %}
+        <div class="modal fade" id="option-create-modal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="post" action="{{ path('admin_option_create_option') }}">
+                    <input type="hidden" name="{{ token.vars.full_name }}" value="{{ token.vars.value }}">
+                    <input type="hidden" name="{{ creationForm.success_url.vars.full_name }}" value="/admin/module/Option">
+                    <input type="hidden" name="{{ creationForm.error_url.vars.full_name }}" value="/admin/module/Option">
+                    <input type="hidden" name="{{ creationForm.locale.vars.full_name }}" value="{{ locale }}">
+                    <input type="hidden" name="{{ creationForm.default_category.vars.full_name }}" value="{{ category_id }}">
+                    <input type="hidden" name="{{ creationForm.currency.vars.full_name }}" value="{{ currency_id }}">
+                    <input type="hidden" name="{{ creationForm.template_id.vars.full_name }}" value="0">
+                    <input type="hidden" name="{{ creationForm.visible.vars.full_name }}" value="1">
+                    <input type="hidden" name="{{ creationForm.virtual.vars.full_name }}" value="0">
+                    <input type="hidden" name="{{ creationForm.quantity.vars.full_name }}" value="0">
+                    <input type="hidden" name="{{ creationForm.weight.vars.full_name }}" value="0">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">{{ 'Add a new option'|trans({}, d) }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">{{ 'Option reference'|trans({}, d) }} *</label>
+                                <input type="text" class="form-control" required name="{{ creationForm.ref.vars.full_name }}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">{{ 'Option title'|trans({}, d) }} *</label>
+                                <input type="text" class="form-control" required name="{{ creationForm.title.vars.full_name }}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">{{ 'Tax rule for this option'|trans({}, d) }} *</label>
+                                <select class="form-select" required name="{{ creationForm.tax_rule.vars.full_name }}">
+                                    <option value="">{{ 'Select a tax rule'|trans({}, d) }}</option>
+                                    {% for taxRule in tax_rules %}
+                                        <option value="{{ taxRule.id }}" {{ taxRule.isDefault ? 'selected' : '' }}>{{ taxRule.title }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">{{ 'Price'|trans({}, d) }} ({{ currency_symbol }}) *</label>
+                                <input type="text" class="form-control" required name="{{ creationForm.price.vars.full_name }}" value="0">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ 'Cancel'|trans({}, d) }}</button>
+                            <button type="submit" class="btn btn-primary">{{ 'Create'|trans({}, d) }}</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    {% endif %}
+
+    {# Delete modal #}
+    {% if is_granted('DELETE', {resource: 'admin.module', module: 'Option'}) %}
+        <div class="modal fade" id="option-delete-modal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="post" action="{{ path('admin_option_delete_option') }}?_token={{ assignToken() }}">
+                    <input type="hidden" name="product_id" id="option-delete-id" value="">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">{{ 'Delete this option'|trans({}, d) }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            {{ 'Do you really want to delete this option?'|trans({}, d) }}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ 'Cancel'|trans({}, d) }}</button>
+                            <button type="submit" class="btn btn-danger">{{ 'Delete'|trans({}, d) }}</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    {% endif %}
+</div>

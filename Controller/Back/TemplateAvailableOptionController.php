@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Option\Controller\Back;
 
 use Exception;
@@ -7,22 +9,25 @@ use Option\Form\TemplateAvailableOptionForm;
 use Option\Service\OptionProductService;
 use Thelia\Controller\Admin\BaseAdminController;
 use Thelia\Core\HttpFoundation\Request;
+use Thelia\Core\Security\AccessManager;
+use Thelia\Core\Security\Resource\AdminResources;
 use Thelia\Log\Tlog;
 use Thelia\Model\TemplateQuery;
+use Thelia\Tools\TokenProvider;
 use Thelia\Tools\URL;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
-/**
- * @Route("/admin/option/template", name="admin_option_template")
- */
+#[Route('/admin/option/template', name: 'admin_option_template')]
 class TemplateAvailableOptionController extends BaseAdminController
 {
-    /**
-     * @Route("/set", name="_option_templates_set", methods="POST")
-     */
+    #[Route('/set', name: '_option_templates_set', methods: 'POST')]
     public function setOptionProductOnTemplate(OptionProductService $optionProductService): Response
     {
+        if (null !== $response = $this->checkAuth(AdminResources::MODULE, 'Option', AccessManager::UPDATE)) {
+            return $response;
+        }
+
         $form = $this->createForm(TemplateAvailableOptionForm::class);
 
         try {
@@ -47,11 +52,15 @@ class TemplateAvailableOptionController extends BaseAdminController
         return $this->generateErrorRedirect($form);
     }
 
-    /**
-     * @Route("/delete", name="_option_template_delete", methods="GET")
-     */
-    public function deleteOptionProductOnTemplate(Request $request, OptionProductService $optionProductService): Response
+    #[Route('/delete', name: '_option_template_delete', methods: 'POST')]
+    public function deleteOptionProductOnTemplate(Request $request, OptionProductService $optionProductService, TokenProvider $tokenProvider): Response
     {
+        if (null !== $response = $this->checkAuth(AdminResources::MODULE, 'Option', AccessManager::DELETE)) {
+            return $response;
+        }
+
+        $tokenProvider->checkToken($request->get('_token'));
+
         try {
             $optionProductId = $request->get('option_product_id');
             $templateId = $request->get('template_id');
@@ -69,7 +78,7 @@ class TemplateAvailableOptionController extends BaseAdminController
 
         return $this->generateRedirect(URL::getInstance()->absoluteUrl('/admin/configuration/templates/update', [
             "current_tab" => "template_option_tab",
-            "template_id" => $templateId ?? null
+            "template_id" => $templateId
         ]));
     }
 }

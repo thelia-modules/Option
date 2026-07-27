@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Option\Controller\Front;
 
 use Exception;
@@ -10,8 +12,11 @@ use OpenApi\OpenApi;
 use Option\Model\OptionProduct;
 use Option\Service\CartItemCustomizationOptionHandler;
 use Option\Service\OptionService;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Thelia\Core\HttpFoundation\JsonResponse;
 use Thelia\Core\HttpFoundation\Request;
+use Thelia\Core\HttpFoundation\Session\Session;
 use Thelia\Core\Translation\Translator;
 use Thelia\Model\CartItemQuery;
 use Symfony\Component\Routing\Annotation\Route;
@@ -70,7 +75,10 @@ class OptionController extends BaseFrontOpenApiController
             return new JsonResponse([]);
         }
 
-        $locale = $request->getSession()->getLang()->getLocale();
+        $session = $request->getSession();
+        $locale = $session instanceof \Thelia\Core\HttpFoundation\Session\Session
+            ? $session->getLang()->getLocale()
+            : \Thelia\Model\Lang::getDefaultLanguage()->getLocale();
 
         $optionsData = [];
 
@@ -83,7 +91,7 @@ class OptionController extends BaseFrontOpenApiController
                 [
                     'title' => $option->getProduct()->setLocale($locale)->getTitle(),
                     'id' => $option->getId(),
-                    'code' => $option->getProduct()?->getRef(),
+                    'code' => $option->getProduct()->getRef(),
                     'price' => round($optionService->getOptionTaxedPrice($option->getProduct()), 2),
                     'untaxedPrice' => round($optionService->getOptionUnTaxedPrice($option->getProduct()), 2)
                 ]
@@ -158,13 +166,22 @@ class OptionController extends BaseFrontOpenApiController
      */
     #[Route(path: '/add/{cartItemId}', name: '_add_cart_item_option', methods: ['POST'])]
     public function addCartItemOption(
+        Request                            $request,
+        EventDispatcherInterface           $dispatcher,
         CartItemCustomizationOptionHandler $optionFormHandler,
         OpenApiService                     $openApiService,
         int                                $cartItemId
     ): JsonResponse
     {
         if (null === $cartItem = CartItemQuery::create()->findPk($cartItemId)) {
-            throw new Exception(Translator::getInstance()?->trans("Error, missing cart item parameter"));
+            throw new Exception(Translator::getInstance()->trans("Error, missing cart item parameter"));
+        }
+
+        // Ensure the cart item belongs to the current session cart (prevents cross-cart tampering).
+        $session = $request->getSession();
+        $sessionCart = $session instanceof Session ? $session->getSessionCart($dispatcher) : null;
+        if (null === $sessionCart || $cartItem->getCartId() !== $sessionCart->getId()) {
+            throw new AccessDeniedHttpException('This cart item does not belong to the current cart.');
         }
 
         $optionFormHandler->updateCustomizationOptionOnCartItem($cartItem);

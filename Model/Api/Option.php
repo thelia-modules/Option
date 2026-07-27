@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Option\Model\Api;
 
 use OpenApi\Annotations as OA;

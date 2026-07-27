@@ -1,0 +1,95 @@
+{% extends "@BackOfficeDefaultTwig/base.html.twig" %}
+{% set d = 'option.bo.default' %}
+{% set token = attribute(form, '_token') %}
+
+{% block title %}{{ 'Edit option'|trans({}, d) }}{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h4 mb-0">
+            {{ 'Edit option'|trans({}, d) }} — {{ option.title }}{% if option.ref %} <small class="text-muted">({{ option.ref }})</small>{% endif %}
+        </h1>
+        <a href="/admin/module/Option" class="btn btn-outline-secondary btn-sm">{{ 'Close'|trans({}, d) }}</a>
+    </div>
+
+    <ul class="nav nav-tabs mb-3" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#option-general" type="button" role="tab">
+                {{ 'General'|trans({}, d) }}
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#option-prices" type="button" role="tab">
+                {{ 'Price'|trans({}, d) }}
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        {# General tab — edits the option (product) core fields #}
+        <div class="tab-pane fade show active" id="option-general" role="tabpanel">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" action="{{ path('admin_option_update_option_process') }}">
+                        <input type="hidden" name="{{ token.vars.full_name }}" value="{{ token.vars.value }}">
+                        <input type="hidden" name="{{ form.id.vars.full_name }}" value="{{ option.id }}">
+                        <input type="hidden" name="{{ form.locale.vars.full_name }}" value="{{ locale }}">
+                        <input type="hidden" name="{{ form.default_category.vars.full_name }}" value="{{ option.defaultCategory }}">
+                        <input type="hidden" name="{{ form.brand_id.vars.full_name }}" value="0">
+                        <input type="hidden" name="{{ form.virtual_document_id.vars.full_name }}" value="0">
+                        <input type="hidden" name="{{ form.virtual.vars.full_name }}" value="{{ option.virtual ? 1 : 0 }}">
+                        <input type="hidden" name="{{ form.postscriptum.vars.full_name }}" value="{{ option.postscriptum }}">
+                        <input type="hidden" name="{{ form.success_url.vars.full_name }}" value="/admin/option/update?option_id={{ option.id }}">
+                        <input type="hidden" name="{{ form.error_url.vars.full_name }}" value="/admin/option/update?option_id={{ option.id }}">
+
+                        <div class="mb-3">
+                            <label class="form-label">{{ 'Option reference'|trans({}, d) }} *</label>
+                            <input type="text" class="form-control" required name="{{ form.ref.vars.full_name }}" value="{{ option.ref }}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">{{ 'Option title'|trans({}, d) }} *</label>
+                            <input type="text" class="form-control" required name="{{ form.title.vars.full_name }}" value="{{ option.title }}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">{{ 'Summary'|trans({}, d) }}</label>
+                            <textarea class="form-control" rows="2" name="{{ form.chapo.vars.full_name }}">{{ option.chapo }}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">{{ 'Description'|trans({}, d) }}</label>
+                            <textarea class="form-control" rows="4" name="{{ form.description.vars.full_name }}">{{ option.description }}</textarea>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input type="hidden" name="{{ form.visible.vars.full_name }}" value="0">
+                            <input type="checkbox" class="form-check-input" id="option-visible" name="{{ form.visible.vars.full_name }}" value="1" {{ option.visible ? 'checked' : '' }}>
+                            <label class="form-check-label" for="option-visible">{{ 'Online'|trans({}, d) }}</label>
+                        </div>
+
+                        {% if is_granted('UPDATE', {resource: 'admin.module', module: 'Option'}) %}
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class="bi bi-save"></i> {{ 'Save'|trans({}, d) }}
+                            </button>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {# Price tab — the price relies on the core product-price mechanism #}
+        <div class="tab-pane fade" id="option-prices" role="tabpanel">
+            <div class="card">
+                <div class="card-body">
+                    <p>
+                        {{ 'Current price'|trans({}, d) }} :
+                        <strong>{{ price is not null ? (price|number_format(2, '.', ' ') ~ ' ' ~ currency_symbol) : '—' }}</strong>
+                    </p>
+                    <p class="text-muted">
+                        {{ 'Prices, sale elements and combinations are managed through the standard product editor.'|trans({}, d) }}
+                    </p>
+                    <a href="/admin/products/update?product_id={{ option.id }}&current_tab=modification" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-box-arrow-up-right"></i> {{ 'Edit prices in the product editor'|trans({}, d) }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
