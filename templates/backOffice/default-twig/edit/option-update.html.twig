@@ -1,5 +1,5 @@
 {% extends "@BackOfficeDefaultTwig/base.html.twig" %}
-{% set d = 'option.bo.default' %}
+{% set d = 'Option' %}
 {% set token = attribute(form, '_token') %}
 
 {% block title %}{{ 'Edit option'|trans({}, d) }}{% endblock %}
@@ -35,8 +35,8 @@
                         <input type="hidden" name="{{ form.id.vars.full_name }}" value="{{ option.id }}">
                         <input type="hidden" name="{{ form.locale.vars.full_name }}" value="{{ locale }}">
                         <input type="hidden" name="{{ form.default_category.vars.full_name }}" value="{{ option.defaultCategory }}">
-                        <input type="hidden" name="{{ form.brand_id.vars.full_name }}" value="0">
-                        <input type="hidden" name="{{ form.virtual_document_id.vars.full_name }}" value="0">
+                        <input type="hidden" name="{{ form.brand_id.vars.full_name }}" value="{{ option.brandId }}">
+                        <input type="hidden" name="{{ form.virtual_document_id.vars.full_name }}" value="">
                         <input type="hidden" name="{{ form.virtual.vars.full_name }}" value="{{ option.virtual ? 1 : 0 }}">
                         <input type="hidden" name="{{ form.postscriptum.vars.full_name }}" value="{{ option.postscriptum }}">
                         <input type="hidden" name="{{ form.success_url.vars.full_name }}" value="/admin/option/update?option_id={{ option.id }}">

@@ -118,6 +118,9 @@ class OptionController extends BaseAdminController
                     'visible' => (bool) $product->getVisible(),
                     'virtual' => (bool) $product->getVirtual(),
                     'defaultCategory' => $product->getDefaultCategoryId(),
+                    // Current brand: submitted back unchanged so saving the General tab does
+                    // not wipe the product's brand association (setBrandId is applied on update).
+                    'brandId' => $product->getBrandId(),
                 ],
                 'price' => null !== $productPrice ? (float) $productPrice->getPrice() : null,
                 'currency_symbol' => null !== $defaultCurrency ? $defaultCurrency->getSymbol() : '',
@@ -138,7 +141,15 @@ class OptionController extends BaseAdminController
         $changeForm = $this->createForm(OptionModificationForm::class);
 
         try {
-            $optionService->updateOption($this->validateForm($changeForm, 'POST'));
+            $form = $this->validateForm($changeForm, 'POST');
+
+            // Only option-products may be updated through this screen: reject a forged id
+            // pointing at any other catalog product.
+            if (null === OptionProductQuery::create()->filterByProductId((int) $form->get('id')->getData())->findOne()) {
+                return $this->pageNotFound();
+            }
+
+            $optionService->updateOption($form);
 
             return $this->generateSuccessRedirect($changeForm);
         } catch (FormValidationException $ex) {
@@ -175,7 +186,15 @@ class OptionController extends BaseAdminController
             $request->query->get('_token')
         );
 
-        $optionService->deleteOption((int)$request->get('product_id'));
+        $productId = (int) $request->get('product_id');
+
+        // Only option-products may be deleted through this screen: reject a forged id
+        // pointing at any other catalog product.
+        if (null === OptionProductQuery::create()->filterByProductId($productId)->findOne()) {
+            return $this->pageNotFound();
+        }
+
+        $optionService->deleteOption($productId);
 
         return $this->generateRedirect('/admin/module/Option');
     }

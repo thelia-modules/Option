@@ -133,49 +133,4 @@ class CategoryAvailableOptionController extends BaseAdminController
         ]));
     }
 
-    /**
-     * TODO : WIP - Lists category's products.
-     */
-    #[Route('/check', name: '_option_category_check', methods: 'GET')]
-    public function check( Request $request ): Response
-    {
-        if (null !== $response = $this->checkAuth(AdminResources::MODULE, 'Option', AccessManager::VIEW)) {
-            return $response;
-        }
-
-        $categoryId = $request->get('category_id');
-        $optionProductId = $request->get('option_product_id');
-        $categoryProductsWithOption = $this->getProductsWithOptionOnCategory(CategoryQuery::create()->findPk
-        ($categoryId), $optionProductId);
-
-        return $this->render(
-            'category/check',
-            [
-                'category_id' => $categoryId,
-                'option_product_id' => $optionProductId,
-                'category_option_product_ids' => $categoryProductsWithOption
-            ]
-        );
-    }
-
-    /**
-     * TODO : WIP
-     * @return Product[]
-     */
-    private function getProductsWithOptionOnCategory(Category $category, ?int $optionId) : array
-    {
-        $productsWithOptionIds = [];
-        $categoryProducts = $category->getProducts();
-
-        $productsAvalaibleOption = ProductAvailableOptionQuery::create()->findByOptionId($optionId);
-        foreach ($categoryProducts as $categoryProduct){
-            foreach ($productsAvalaibleOption as $productAvailableOption){
-                if($categoryProduct->getId() === $productAvailableOption->getProductId()){
-                    $productsWithOptionIds[] = $categoryProduct->getId();
-                }
-            }
-        }
-
-        return $productsWithOptionIds;
-    }
 }

@@ -31,7 +31,7 @@ class ProductEditHook extends BaseHook
                 'id' => 'product_option_tab',
                 'title' => $this->trans('Options', [], Option::DOMAIN_NAME),
                 'href' => URL::getInstance()->absoluteUrl('/admin/option/product/show/' . $event->getArgument('id')),
-                'content' => "Contenu !"
+                'content' => ''
             ]
         );
     }
