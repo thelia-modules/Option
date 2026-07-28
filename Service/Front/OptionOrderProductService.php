@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Option\Service\Front;
 
 use Option\Model\OptionCartItemOrderProduct;
@@ -18,7 +20,7 @@ use Thelia\Model\Product;
 use Thelia\Model\ProductQuery;
 use Thelia\Model\TaxRule;
 use Thelia\Model\TaxRuleQuery;
-use Thelia\TaxEngine\Calculator;
+use Thelia\Domain\Taxation\TaxEngine\Calculator;
 use Thelia\Tools\I18n;
 
 class OptionOrderProductService
@@ -105,7 +107,10 @@ class OptionOrderProductService
        $forceUntaxed = 0
     ): array
     {
-        $locale = $this->request->getSession()->getLang()->getLocale();
+        $session = $this->request->getSession();
+        $locale = $session instanceof \Thelia\Core\HttpFoundation\Session\Session
+            ? $session->getLang()->getLocale()
+            : \Thelia\Model\Lang::getDefaultLanguage()->getLocale();
         $product->setLocale($locale);
 
         $title = $customization->getProductAvailableOption()->getOptionProduct()->getProduct()->setLocale('fr_FR')->getTitle();
@@ -124,7 +129,6 @@ class OptionOrderProductService
             $untaxedPrice = $taxedPrice;
         }
 
-        /** @var  $taxI18n */
         $taxI18n = I18n::forceI18nRetrieving($locale, 'TaxRule', $taxRule->getId());
 
         $orderProductMasterQuantity = $orderProductMaster->getQuantity();
@@ -146,7 +150,7 @@ class OptionOrderProductService
             ->setPromoPrice($untaxedPrice)
             ->setWasNew(0)
             ->setWasInPromo(0)
-            ->setWeight(0)
+            ->setWeight('0')
             ->setTaxRuleTitle($taxI18n->getTitle())
             ->setTaxRuleDescription('')
             ->setEanCode(null)
@@ -199,7 +203,7 @@ class OptionOrderProductService
      * @param Product|null $product
      * @return array|mixed|TaxRule|null
      */
-    public function getCustomizationTaxeRule(Product $product = null): mixed
+    public function getCustomizationTaxeRule(?Product $product = null): mixed
     {
         $taxRule = TaxRuleQuery::create()
             ->filterById(ConfigQuery::read("tax_customization_default_id", 1))

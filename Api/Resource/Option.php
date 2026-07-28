@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Option\Api\Resource;
 
 use ApiPlatform\Metadata\ApiResource;
@@ -76,7 +78,7 @@ class Option extends AbstractTranslatableResource
 
     public function setId(int $id): Option
     {
-        $this->id = $id;
+        $this->id = (string) $id;
         return $this;
     }
 

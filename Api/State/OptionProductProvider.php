@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Option\Api\State;
 
 use ApiPlatform\Metadata\CollectionOperationInterface;
@@ -11,6 +13,7 @@ use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\Collection\Collection;
 use Thelia\Api\Bridge\Propel\Extension\QueryResultCollectionExtensionInterface;
 use Thelia\Api\Bridge\Propel\Service\ApiResourcePropelTransformerService;
+use Thelia\Log\Tlog;
 use Thelia\Model\LangQuery;
 use Thelia\Model\Product;
 use Thelia\Model\ProductPriceQuery;
@@ -53,10 +56,10 @@ class OptionProductProvider implements ProviderInterface
             return null;
         }
 
-        return $this->productToOptionResource($product, $resourceClass, $context, LangQuery::create()->filterByActive(1)->find());
+        return $this->productToOptionResource($product, $resourceClass, $context, LangQuery::create()->filterByActive(true)->find());
     }
 
-    private function provideCollection(Operation $operation, array $context = []): object|array|null
+    private function provideCollection(Operation $operation, array $context = []): array
     {
         $resourceClass = $operation->getClass();
         
@@ -85,7 +88,7 @@ class OptionProductProvider implements ProviderInterface
             $results = $query->find();
         }
 
-        $langs = LangQuery::create()->filterByActive(1)->find();
+        $langs = LangQuery::create()->filterByActive(true)->find();
         return array_map(
             function (Product $product) use ($resourceClass, $context, $langs) {
                 return $this->productToOptionResource($product, $resourceClass, $context, $langs);
@@ -109,26 +112,41 @@ class OptionProductProvider implements ProviderInterface
         $pse = $product->getDefaultSaleElements();
         $price = ProductPriceQuery::create()->filterByProductSaleElements($pse)->findOne();
 
-        $apiResource->setPrice($price->getPrice())
-            ->setPromoPrice($price->getPromoPrice())
-            ->setPromo($pse->getPromo())
-            ->setWeight($pse->getWeight())
-            ->setQuantity($pse->getQuantity())
-            ->setVirtual($product->getVirtual())
-            ->setVisible($product->getVisible());
+        $apiResource->setPrice((float) $price->getPrice())
+            ->setPromoPrice((float) $price->getPromoPrice())
+            ->setPromo((bool) $pse->getPromo())
+            ->setWeight((float) $pse->getWeight())
+            ->setQuantity((int) $pse->getQuantity())
+            ->setVirtual((bool) $product->getVirtual())
+            ->setVisible((bool) $product->getVisible());
 
-        $reflector = new \ReflectionClass($resourceClass);
-
-        $this->apiResourceService->manageTranslatableResource(
-            resourceClass: $resourceClass,
-            propelModel: $product,
-            baseModel: $product,
-            apiResource: $apiResource,
-            parentReflector: null,
-            reflector: $reflector,
-            context: $context,
-            langs: $langs
-        );
+        // @todo The core exposes no public API to hydrate the i18n of a resource built from an
+        //       arbitrary model (here a Product mapped to an Option resource — modelToResource()
+        //       does not fit this atypical mapping). We call the private manageTranslatableResource()
+        //       via reflection. Guard against its removal so a future core refactor degrades
+        //       gracefully (resource returned without translations + a logged warning) instead of
+        //       throwing a ReflectionException. A public i18n-hydration entry point should be
+        //       requested on the core side.
+        if (method_exists($this->apiResourceService, 'manageTranslatableResource')) {
+            $reflector = new \ReflectionClass($resourceClass);
+            $manageTranslatable = new \ReflectionMethod($this->apiResourceService, 'manageTranslatableResource');
+            $manageTranslatable->invoke(
+                $this->apiResourceService,
+                $resourceClass,
+                $product,
+                $product,
+                $apiResource,
+                null,
+                $reflector,
+                $context,
+                $langs
+            );
+        } else {
+            Tlog::getInstance()->addWarning(
+                'Option: ApiResourcePropelTransformerService::manageTranslatableResource() is no longer available; '
+                .'the option API resource is returned without i18n hydration.'
+            );
+        }
 
         return $apiResource;
     }

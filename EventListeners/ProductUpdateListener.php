@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Option\EventListeners;
 
 use JsonException;
@@ -11,8 +13,8 @@ use Thelia\Core\Event\Product\ProductCloneEvent;
 use Thelia\Core\Event\Product\ProductDeleteCategoryEvent;
 use Thelia\Core\Event\Product\ProductSetTemplateEvent;
 use Thelia\Core\Event\TheliaEvents;
-use Thelia\Model\Base\CategoryQuery;
-use Thelia\Model\Base\TemplateQuery;
+use Thelia\Model\CategoryQuery;
+use Thelia\Model\TemplateQuery;
 
 class ProductUpdateListener implements EventSubscriberInterface
 {

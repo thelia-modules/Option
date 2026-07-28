@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Option\Service;
 
 use Option\Event\OptionProductCreateEvent;
@@ -16,7 +18,7 @@ use Thelia\Model\Product;
 use Thelia\Model\ProductPrice;
 use Thelia\Model\ProductPriceQuery;
 use Thelia\Model\ProductSaleElementsQuery;
-use Thelia\TaxEngine\Calculator;
+use Thelia\Domain\Taxation\TaxEngine\Calculator;
 
 class OptionProvider
 {
@@ -73,7 +75,7 @@ class OptionProvider
     {
         $saleElement = ProductSaleElementsQuery::create()
             ->filterByProduct($product)
-            ->filterByIsDefault(1)
+            ->filterByIsDefault(true)
             ->findOne();
 
         if (!$saleElement) {

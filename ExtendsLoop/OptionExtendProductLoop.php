@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Option\ExtendsLoop;
 
 use Option\Model\Map\OptionProductTableMap;

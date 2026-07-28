@@ -1,0 +1,16 @@
+<script>
+(function () {
+    'use strict';
+
+    document.addEventListener('click', function (e) {
+        var deleteBtn = e.target.closest('.js-option-delete');
+        if (!deleteBtn) {
+            return;
+        }
+        var input = document.getElementById('option-delete-id');
+        if (input) {
+            input.value = deleteBtn.dataset.id || '';
+        }
+    });
+}());
+</script>

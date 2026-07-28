@@ -1,0 +1,4 @@
+{# Additional customization data shown under an order product line (BO twig). #}
+{% if orderProductCustomization is not empty %}
+    <pre class="mb-0">{{ orderProductCustomization|json_encode(constant('JSON_PRETTY_PRINT') b-or constant('JSON_UNESCAPED_UNICODE')) }}</pre>
+{% endif %}

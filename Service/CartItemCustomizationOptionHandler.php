@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Option\Service;
 
 use Exception;
@@ -38,7 +40,7 @@ class CartItemCustomizationOptionHandler
 
         $options = $jsonRequest['options'];
 
-        /** @var OptionProduct[] $optionsProduct */
+        /** @var OptionProduct[] $optionsProducts */
         $optionsProducts = $this->optionCartItemService->getOptionsByCartItem($cartItem);
 
         $optionsProducts = array_filter($optionsProducts,

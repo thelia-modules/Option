@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Option\ExtendsLoop;
 
 use Exception;
@@ -32,12 +34,14 @@ class OptionExtendCategoryLoop implements EventSubscriberInterface
      */
     public function optionCategoryBuildModelCriteria(LoopExtendsBuildModelCriteriaEvent $event): void
     {
-        $optionCategoryId = $this->optionService->getOptionCategory()?->getId();
+        $optionCategoryId = $this->optionService->getOptionCategory()->getId();
 
         if (!$optionCategoryId) {
             return;
         }
 
-        $event->getModelCriteria()->filterById($optionCategoryId, Criteria::NOT_IN);
+        /** @var \Thelia\Model\CategoryQuery $query */
+        $query = $event->getModelCriteria();
+        $query->filterById($optionCategoryId, Criteria::NOT_IN);
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Option\Form\Base;
 
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;

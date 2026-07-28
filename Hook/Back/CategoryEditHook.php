@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Option\Hook\Back;
 
 use Option\Option;
@@ -28,7 +30,7 @@ class CategoryEditHook extends BaseHook
                 'id' => 'category_option_tab',
                 'title' => $this->trans('Options', [], Option::DOMAIN_NAME),
                 'href' => URL::getInstance()->absoluteUrl('/admin/option/category/show/' . $event->getArgument('id')),
-                'content' => "Contenu !"
+                'content' => ''
             ]
         );
     }

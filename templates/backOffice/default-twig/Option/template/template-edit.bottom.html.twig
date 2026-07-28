@@ -1,0 +1,68 @@
+{# Paid options block on the product-template edit page (BO twig). #}
+{% set d = 'Option' %}
+{% set token = attribute(form, '_token') %}
+
+<div class="card mt-4" id="options-container">
+    <div class="card-header">
+        <a href="/admin/module/Option">{{ 'Paid options'|trans({}, d) }}</a>
+    </div>
+    <div class="card-body">
+        <p class="text-muted">{{ 'Manage the paid options for products using this template.'|trans({}, d) }}</p>
+
+        {% if is_granted('UPDATE', {resource: 'admin.module', module: 'Option'}) %}
+            <form method="post" action="{{ path('admin_option_template_option_templates_set') }}" class="mb-4">
+                <input type="hidden" name="{{ token.vars.full_name }}" value="{{ token.vars.value }}">
+                <input type="hidden" name="{{ form.template_id.vars.full_name }}" value="{{ template_id }}">
+                <input type="hidden" name="{{ form.success_url.vars.full_name }}" value="/admin/configuration/templates/update?current_tab=template_option_tab&template_id={{ template_id }}">
+                <input type="hidden" name="{{ form.error_url.vars.full_name }}" value="/admin/configuration/templates/update?current_tab=template_option_tab&template_id={{ template_id }}">
+                <div class="input-group">
+                    <select name="{{ form.option_id.vars.full_name }}" required class="form-select">
+                        <option value="" selected disabled>{{ 'Choose an option...'|trans({}, d) }}</option>
+                        {% for choice in form.option_id.vars.choices %}
+                            <option value="{{ choice.value }}">{{ choice.label }}</option>
+                        {% endfor %}
+                    </select>
+                    <button class="btn btn-primary" type="submit">{{ 'Apply'|trans({}, d) }}</button>
+                </div>
+            </form>
+        {% endif %}
+
+        {% if attached_options|length %}
+            <div class="table-responsive">
+                <table class="table table-striped table-sm align-middle">
+                    <thead>
+                        <tr>
+                            <th>{{ 'Reference'|trans({}, d) }}</th>
+                            <th>{{ 'Option title'|trans({}, d) }}</th>
+                            <th class="text-end">{{ 'Price'|trans({}, d) }}</th>
+                            <th class="text-end">{{ 'Actions'|trans({}, d) }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for option in attached_options %}
+                            <tr>
+                                <td>{{ option.ref }}</td>
+                                <td><a href="{{ path('admin_option_update_option_view', {option_id: option.productId}) }}">{{ option.title }}</a></td>
+                                <td class="text-end">{{ option.price is not null ? option.price|number_format(2, '.', ' ') : '—' }}</td>
+                                <td class="text-end">
+                                    {% if is_granted('DELETE', {resource: 'admin.module', module: 'Option'}) %}
+                                        <form method="post" action="{{ path('admin_option_template_option_template_delete') }}?_token={{ assignToken() }}"
+                                              class="d-inline" onsubmit="return confirm('{{ 'Remove this option from the template?'|trans({}, d) }}')">
+                                            <input type="hidden" name="template_id" value="{{ template_id }}">
+                                            <input type="hidden" name="option_product_id" value="{{ option.optionProductId }}">
+                                            <button type="submit" class="btn btn-danger btn-sm" title="{{ 'Delete this option'|trans({}, d) }}">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info mb-0">{{ 'No option attached to this template yet.'|trans({}, d) }}</div>
+        {% endif %}
+    </div>
+</div>

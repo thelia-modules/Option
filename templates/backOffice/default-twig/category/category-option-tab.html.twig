@@ -1,0 +1,61 @@
+{# Options tab content for the category edit page (BO twig). #}
+{% set d = 'Option' %}
+{% set token = attribute(form, '_token') %}
+
+<div class="option-category-tab">
+    <h4 class="mb-3">{{ 'Paid options management'|trans({}, d) }}</h4>
+
+    {% if is_granted('UPDATE', {resource: 'admin.module', module: 'Option'}) %}
+        <form method="post" action="{{ path('admin_option_category_option_category_set') }}" class="mb-4">
+            <input type="hidden" name="{{ token.vars.full_name }}" value="{{ token.vars.value }}">
+            <input type="hidden" name="{{ form.category_id.vars.full_name }}" value="{{ category_id }}">
+            <input type="hidden" name="{{ form.success_url.vars.full_name }}" value="/admin/categories/update?current_tab=category_option_tab&category_id={{ category_id }}">
+            <input type="hidden" name="{{ form.error_url.vars.full_name }}" value="/admin/categories/update?current_tab=category_option_tab&category_id={{ category_id }}">
+            <label class="form-label">{{ 'Available options'|trans({}, d) }}</label>
+            <div class="input-group">
+                <select name="{{ form.option_id.vars.full_name }}" required class="form-select">
+                    <option value="" selected disabled>{{ 'Choose an option...'|trans({}, d) }}</option>
+                    {% for choice in form.option_id.vars.choices %}
+                        <option value="{{ choice.value }}">{{ choice.label }}</option>
+                    {% endfor %}
+                </select>
+                <button class="btn btn-primary" type="submit">{{ 'Apply'|trans({}, d) }}</button>
+            </div>
+            <small class="text-muted">{{ 'The option will be applied to all products of this category.'|trans({}, d) }}</small>
+        </form>
+    {% endif %}
+
+    {% if attached_options|length %}
+        <div class="list-group">
+            {% for option in attached_options %}
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>
+                        <strong>{{ option.title }}</strong> — {{ option.ref }}
+                        {% if option.price is not null %}
+                            <span class="text-warning ms-2">{{ option.price|number_format(2, '.', ' ') }}</span>
+                        {% endif %}
+                    </span>
+                    <span class="text-nowrap">
+                        <a class="btn btn-outline-secondary btn-sm" href="{{ path('admin_option_update_option_view', {option_id: option.productId}) }}"
+                           title="{{ 'View this option'|trans({}, d) }}">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        {% if is_granted('DELETE', {resource: 'admin.module', module: 'Option'}) %}
+                            <form method="post" action="{{ path('admin_option_category_option_category_delete') }}?_token={{ assignToken() }}"
+                                  class="d-inline" onsubmit="return confirm('{{ 'Remove this option from the category products?'|trans({}, d) }}')">
+                                <input type="hidden" name="option_product_id" value="{{ option.optionProductId }}">
+                                <input type="hidden" name="category_id" value="{{ category_id }}">
+                                <input type="hidden" name="delete_all" value="0">
+                                <button type="submit" class="btn btn-danger btn-sm" title="{{ 'Delete this option'|trans({}, d) }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        {% endif %}
+                    </span>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">{{ 'No option attached to this category yet.'|trans({}, d) }}</div>
+    {% endif %}
+</div>
