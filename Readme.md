@@ -2,12 +2,19 @@
 
 This module allows you to manage the addition of paid options to your products.
 
+## Compatibility
+
+| Module version | Thelia version |
+|----------------|----------------|
+| 3.x | Thelia 3 (twig) |
+| 2.x | Thelia 2 |
+
 ## Installation
 
 ### Composer
 
 ```
-composer require thelia/option-module:~1.0
+composer require thelia/option-module:~3.0
 ```
 
 ## Usage
