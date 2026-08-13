@@ -1,31 +1,29 @@
-{# Paid options block on the product-template edit page (BO twig). #}
-{% set d = 'Option' %}
-{% set token = attribute(form, '_token') %}
+{# Paid options block on the product-template edit page (BO twig).
+
+   The attached options are rendered as a table here (and not with the list-group partial the product
+   and category tabs share) because this block sits in the middle of the template edit page, where the
+   surrounding sections are all tables. #}
+{% set d = 'option' %}
+{% set template_tab_url = path('admin.configuration.templates.update', {current_tab: 'template_option_tab', template_id: template_id}) %}
 
 <div class="card mt-4" id="options-container">
     <div class="card-header">
-        <a href="/admin/module/Option">{{ 'Paid options'|trans({}, d) }}</a>
+        <a href="{{ path('admin.module.configure', {module_code: 'Option'}) }}">{{ 'Paid options'|trans({}, d) }}</a>
     </div>
     <div class="card-body">
         <p class="text-muted">{{ 'Manage the paid options for products using this template.'|trans({}, d) }}</p>
 
-        {% if is_granted('UPDATE', {resource: 'admin.module', module: 'Option'}) %}
-            <form method="post" action="{{ path('admin_option_template_option_templates_set') }}" class="mb-4">
-                <input type="hidden" name="{{ token.vars.full_name }}" value="{{ token.vars.value }}">
-                <input type="hidden" name="{{ form.template_id.vars.full_name }}" value="{{ template_id }}">
-                <input type="hidden" name="{{ form.success_url.vars.full_name }}" value="/admin/configuration/templates/update?current_tab=template_option_tab&template_id={{ template_id }}">
-                <input type="hidden" name="{{ form.error_url.vars.full_name }}" value="/admin/configuration/templates/update?current_tab=template_option_tab&template_id={{ template_id }}">
-                <div class="input-group">
-                    <select name="{{ form.option_id.vars.full_name }}" required class="form-select">
-                        <option value="" selected disabled>{{ 'Choose an option...'|trans({}, d) }}</option>
-                        {% for choice in form.option_id.vars.choices %}
-                            <option value="{{ choice.value }}">{{ choice.label }}</option>
-                        {% endfor %}
-                    </select>
-                    <button class="btn btn-primary" type="submit">{{ 'Apply'|trans({}, d) }}</button>
-                </div>
-            </form>
-        {% endif %}
+        {{ include('Option/include/_attach-option-form.html.twig', {
+            form: form,
+            set_route: 'admin_option_template_option_templates_set',
+            hidden_fields: {
+                template_id: template_id,
+                success_url: template_tab_url,
+                error_url: template_tab_url,
+            },
+            label: null,
+            help: null,
+        }, with_context = false) }}
 
         {% if attached_options|length %}
             <div class="table-responsive">
@@ -46,8 +44,10 @@
                                 <td class="text-end">{{ option.price is not null ? option.price|number_format(2, '.', ' ') : '—' }}</td>
                                 <td class="text-end">
                                     {% if is_granted('DELETE', {resource: 'admin.module', module: 'Option'}) %}
+                                        {# |e('js') : an apostrophe in the translation would otherwise be decoded
+                                           before the JS is parsed and the delete would submit unconfirmed. #}
                                         <form method="post" action="{{ path('admin_option_template_option_template_delete') }}?_token={{ assignToken() }}"
-                                              class="d-inline" onsubmit="return confirm('{{ 'Remove this option from the template?'|trans({}, d) }}')">
+                                              class="d-inline" onsubmit="return confirm('{{ 'Remove this option from the template?'|trans({}, d)|e('js') }}')">
                                             <input type="hidden" name="template_id" value="{{ template_id }}">
                                             <input type="hidden" name="option_product_id" value="{{ option.optionProductId }}">
                                             <button type="submit" class="btn btn-danger btn-sm" title="{{ 'Delete this option'|trans({}, d) }}">

@@ -8,11 +8,10 @@ use Exception;
 use Option\Form\ProductAvailableOptionForm;
 use Option\Model\ProductAvailableOptionQuery;
 use Option\Service\OptionProductService;
-use Propel\Runtime\ActiveQuery\Criteria;
+use Option\Service\OptionService;
 use Thelia\Controller\Admin\BaseAdminController;
 use Thelia\Core\Security\AccessManager;
 use Thelia\Core\Security\Resource\AdminResources;
-use Thelia\Model\ProductPriceQuery;
 use Thelia\Core\HttpFoundation\Request;
 use Thelia\Log\Tlog;
 use Thelia\Tools\TokenProvider;
@@ -24,7 +23,7 @@ use Symfony\Component\Routing\Attribute\Route;
 class ProductAvailableOptionController extends BaseAdminController
 {
     #[Route('/show/{productId}', name: '_option_product_show', methods: 'GET')]
-    public function showOptionsProduct(int $productId): Response
+    public function showOptionsProduct(int $productId, OptionService $optionService): Response
     {
         if (null !== $response = $this->checkAuth(AdminResources::MODULE, 'Option', AccessManager::VIEW)) {
             return $response;
@@ -42,17 +41,12 @@ class ProductAvailableOptionController extends BaseAdminController
 
             $product->setLocale($locale);
 
-            $productPrice = ProductPriceQuery::create()
-                ->filterByProductSaleElements($product->getDefaultSaleElements())
-                ->orderByCurrencyId(Criteria::ASC)
-                ->findOne();
-
             $attachedOptions[] = [
                 'optionProductId' => $productAvailableOption->getOptionId(),
                 'productId' => $product->getId(),
                 'ref' => $product->getRef(),
                 'title' => $product->getTitle(),
-                'price' => null !== $productPrice ? (float) $productPrice->getPrice() : null,
+                'price' => $optionService->resolveDefaultPrice($product),
             ];
         }
 

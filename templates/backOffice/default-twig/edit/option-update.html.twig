@@ -1,6 +1,8 @@
 {% extends "@BackOfficeDefaultTwig/base.html.twig" %}
-{% set d = 'Option' %}
+{% set d = 'option' %}
 {% set token = attribute(form, '_token') %}
+{% set configure_path = path('admin.module.configure', {module_code: 'Option'}) %}
+{% set option_update_path = path('admin_option_update_option_view', {option_id: option.id}) %}
 
 {% block title %}{{ 'Edit option'|trans({}, d) }}{% endblock %}
 
@@ -9,7 +11,7 @@
         <h1 class="h4 mb-0">
             {{ 'Edit option'|trans({}, d) }} — {{ option.title }}{% if option.ref %} <small class="text-muted">({{ option.ref }})</small>{% endif %}
         </h1>
-        <a href="/admin/module/Option" class="btn btn-outline-secondary btn-sm">{{ 'Close'|trans({}, d) }}</a>
+        <a href="{{ configure_path }}" class="btn btn-outline-secondary btn-sm">{{ 'Close'|trans({}, d) }}</a>
     </div>
 
     <ul class="nav nav-tabs mb-3" role="tablist">
@@ -39,8 +41,8 @@
                         <input type="hidden" name="{{ form.virtual_document_id.vars.full_name }}" value="">
                         <input type="hidden" name="{{ form.virtual.vars.full_name }}" value="{{ option.virtual ? 1 : 0 }}">
                         <input type="hidden" name="{{ form.postscriptum.vars.full_name }}" value="{{ option.postscriptum }}">
-                        <input type="hidden" name="{{ form.success_url.vars.full_name }}" value="/admin/option/update?option_id={{ option.id }}">
-                        <input type="hidden" name="{{ form.error_url.vars.full_name }}" value="/admin/option/update?option_id={{ option.id }}">
+                        <input type="hidden" name="{{ form.success_url.vars.full_name }}" value="{{ option_update_path }}">
+                        <input type="hidden" name="{{ form.error_url.vars.full_name }}" value="{{ option_update_path }}">
 
                         <div class="mb-3">
                             <label class="form-label">{{ 'Option reference'|trans({}, d) }} *</label>
@@ -85,7 +87,7 @@
                     <p class="text-muted">
                         {{ 'Prices, sale elements and combinations are managed through the standard product editor.'|trans({}, d) }}
                     </p>
-                    <a href="/admin/products/update?product_id={{ option.id }}&current_tab=modification" class="btn btn-outline-primary btn-sm">
+                    <a href="{{ path('admin.products.update', {product_id: option.id, current_tab: 'modification'}) }}" class="btn btn-outline-primary btn-sm">
                         <i class="bi bi-box-arrow-up-right"></i> {{ 'Edit prices in the product editor'|trans({}, d) }}
                     </a>
                 </div>

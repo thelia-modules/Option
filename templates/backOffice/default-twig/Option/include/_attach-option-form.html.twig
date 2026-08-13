@@ -1,0 +1,35 @@
+{# Shared "attach an option" form (BO twig), used by the product, category and product-template tabs.
+
+   Included with with_context = false, so every variable it uses must be passed explicitly:
+     form           FormView of the module form holding option_id, success_url, error_url and _token
+     set_route      name of the POST route attaching the option
+     hidden_fields  dict of {form child name: value} rendered as hidden inputs (ids, success/error urls)
+     label          already-translated label above the select, or null for none
+     help           already-translated hint below the select, or null for none
+#}
+{% set d = 'option' %}
+{% set token = attribute(form, '_token') %}
+
+{% if is_granted('UPDATE', {resource: 'admin.module', module: 'Option'}) %}
+    <form method="post" action="{{ path(set_route) }}" class="mb-4">
+        <input type="hidden" name="{{ token.vars.full_name }}" value="{{ token.vars.value }}">
+        {% for name, value in hidden_fields %}
+            <input type="hidden" name="{{ attribute(form, name).vars.full_name }}" value="{{ value }}">
+        {% endfor %}
+        {% if label|default(null) is not null %}
+            <label class="form-label">{{ label }}</label>
+        {% endif %}
+        <div class="input-group">
+            <select name="{{ form.option_id.vars.full_name }}" required class="form-select">
+                <option value="" selected disabled>{{ 'Choose an option...'|trans({}, d) }}</option>
+                {% for choice in form.option_id.vars.choices %}
+                    <option value="{{ choice.value }}">{{ choice.label }}</option>
+                {% endfor %}
+            </select>
+            <button class="btn btn-primary" type="submit">{{ 'Apply'|trans({}, d) }}</button>
+        </div>
+        {% if help|default(null) is not null %}
+            <small class="text-muted">{{ help }}</small>
+        {% endif %}
+    </form>
+{% endif %}

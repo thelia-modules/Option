@@ -1,62 +1,32 @@
 {# Options tab content for the product edit page (BO twig). #}
-{% set d = 'Option' %}
-{% set token = attribute(form, '_token') %}
+{% set d = 'option' %}
+{% set product_tab_url = path('admin.products.update', {current_tab: 'product_option_tab', product_id: product_id}) %}
 
 <div class="option-product-tab">
     <h4 class="mb-3">{{ 'Paid options management'|trans({}, d) }}</h4>
 
     {# Attach an option to the product #}
-    {% if is_granted('UPDATE', {resource: 'admin.module', module: 'Option'}) %}
-        <form method="post" action="{{ path('admin_option_product_option_product_set') }}" class="mb-4">
-            <input type="hidden" name="{{ token.vars.full_name }}" value="{{ token.vars.value }}">
-            <input type="hidden" name="{{ form.product_id.vars.full_name }}" value="{{ product_id }}">
-            <input type="hidden" name="{{ form.success_url.vars.full_name }}" value="/admin/products/update?current_tab=product_option_tab&product_id={{ product_id }}">
-            <input type="hidden" name="{{ form.error_url.vars.full_name }}" value="/admin/products/update?current_tab=product_option_tab&product_id={{ product_id }}">
-            <label class="form-label">{{ 'Available options'|trans({}, d) }}</label>
-            <div class="input-group">
-                <select name="{{ form.option_id.vars.full_name }}" required class="form-select">
-                    <option value="" selected disabled>{{ 'Choose an option...'|trans({}, d) }}</option>
-                    {% for choice in form.option_id.vars.choices %}
-                        <option value="{{ choice.value }}">{{ choice.label }}</option>
-                    {% endfor %}
-                </select>
-                <button class="btn btn-primary" type="submit">{{ 'Apply'|trans({}, d) }}</button>
-            </div>
-        </form>
-    {% endif %}
+    {{ include('Option/include/_attach-option-form.html.twig', {
+        form: form,
+        set_route: 'admin_option_product_option_product_set',
+        hidden_fields: {
+            product_id: product_id,
+            success_url: product_tab_url,
+            error_url: product_tab_url,
+        },
+        label: 'Available options'|trans({}, d),
+        help: null,
+    }, with_context = false) }}
 
     {# Options already attached to the product #}
-    {% if attached_options|length %}
-        <div class="list-group">
-            {% for option in attached_options %}
-                <div class="list-group-item d-flex justify-content-between align-items-center">
-                    <span>
-                        <strong>{{ option.title }}</strong> — {{ option.ref }}
-                        {% if option.price is not null %}
-                            <span class="text-warning ms-2">{{ option.price|number_format(2, '.', ' ') }}</span>
-                        {% endif %}
-                    </span>
-                    <span class="text-nowrap">
-                        <a class="btn btn-outline-secondary btn-sm" href="{{ path('admin_option_update_option_view', {option_id: option.productId}) }}"
-                           title="{{ 'View this option'|trans({}, d) }}">
-                            <i class="bi bi-eye"></i>
-                        </a>
-                        {% if is_granted('DELETE', {resource: 'admin.module', module: 'Option'}) %}
-                            <form method="post" action="{{ path('admin_option_product_option_product_delete') }}?_token={{ assignToken() }}"
-                                  class="d-inline" onsubmit="return confirm('{{ 'Remove this option from the product?'|trans({}, d) }}')">
-                                <input type="hidden" name="option_product_id" value="{{ option.optionProductId }}">
-                                <input type="hidden" name="product_id" value="{{ product_id }}">
-                                <input type="hidden" name="force" value="0">
-                                <button type="submit" class="btn btn-danger btn-sm" title="{{ 'Delete this option'|trans({}, d) }}">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
-                        {% endif %}
-                    </span>
-                </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="alert alert-info">{{ 'No option attached to this product yet.'|trans({}, d) }}</div>
-    {% endif %}
+    {{ include('Option/include/_attached-options.html.twig', {
+        attached_options: attached_options,
+        delete_route: 'admin_option_product_option_product_delete',
+        delete_fields: {
+            product_id: product_id,
+            force: 0,
+        },
+        confirm_message: 'Remove this option from the product?'|trans({}, d),
+        empty_message: 'No option attached to this product yet.'|trans({}, d),
+    }, with_context = false) }}
 </div>

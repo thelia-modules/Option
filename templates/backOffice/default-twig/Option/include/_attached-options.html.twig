@@ -1,0 +1,49 @@
+{# Shared list of the options already attached to a product or a category, with the delete form (BO twig).
+
+   Included with with_context = false, so every variable it uses must be passed explicitly:
+     attached_options  rows exposing title, ref, price, productId and optionProductId
+     delete_route      name of the POST route detaching the option
+     delete_fields     dict of extra hidden fields posted next to option_product_id
+     confirm_message   already-translated confirmation text (js-escaped here, see below)
+     empty_message     already-translated message shown when nothing is attached
+
+   confirm_message goes through |e('js'): with plain HTML escaping an apostrophe in the translation
+   is decoded back before the JS is parsed, which breaks the confirm() call and submits the delete
+   without asking anything.
+#}
+{% set d = 'option' %}
+
+{% if attached_options|length %}
+    <div class="list-group">
+        {% for option in attached_options %}
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                <span>
+                    <strong>{{ option.title }}</strong> — {{ option.ref }}
+                    {% if option.price is not null %}
+                        <span class="text-warning ms-2">{{ option.price|number_format(2, '.', ' ') }}</span>
+                    {% endif %}
+                </span>
+                <span class="text-nowrap">
+                    <a class="btn btn-outline-secondary btn-sm" href="{{ path('admin_option_update_option_view', {option_id: option.productId}) }}"
+                       title="{{ 'View this option'|trans({}, d) }}">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                    {% if is_granted('DELETE', {resource: 'admin.module', module: 'Option'}) %}
+                        <form method="post" action="{{ path(delete_route) }}?_token={{ assignToken() }}"
+                              class="d-inline" onsubmit="return confirm('{{ confirm_message|e('js') }}')">
+                            <input type="hidden" name="option_product_id" value="{{ option.optionProductId }}">
+                            {% for name, value in delete_fields %}
+                                <input type="hidden" name="{{ name }}" value="{{ value }}">
+                            {% endfor %}
+                            <button type="submit" class="btn btn-danger btn-sm" title="{{ 'Delete this option'|trans({}, d) }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    {% endif %}
+                </span>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="alert alert-info">{{ empty_message }}</div>
+{% endif %}

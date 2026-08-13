@@ -8,10 +8,8 @@ use Exception;
 use Option\Model\OptionProductQuery;
 use Option\Option;
 use Option\Service\OptionService as OptionService;
-use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\Exception\PropelException;
 use Thelia\Model\CurrencyQuery;
-use Thelia\Model\ProductPriceQuery;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -73,7 +71,7 @@ class OptionController extends BaseAdminController
      * @throws PropelException
      */
     #[Route('/update', name: '_update_option_view', methods: 'GET')]
-    public function updateOptionView(Request $request): Response
+    public function updateOptionView(Request $request, OptionService $optionService): Response
     {
         if (null !== $response = $this->checkAuth(AdminResources::MODULE, 'Option', AccessManager::UPDATE)) {
             return $response;
@@ -94,11 +92,6 @@ class OptionController extends BaseAdminController
 
         $locale = $this->getCurrentEditionLocale();
         $product->setLocale($locale);
-
-        $productPrice = ProductPriceQuery::create()
-            ->filterByProductSaleElements($product->getDefaultSaleElements())
-            ->orderByCurrencyId(Criteria::ASC)
-            ->findOne();
 
         $defaultCurrency = CurrencyQuery::create()->filterByByDefault(1)->findOne();
 
@@ -122,7 +115,7 @@ class OptionController extends BaseAdminController
                     // not wipe the product's brand association (setBrandId is applied on update).
                     'brandId' => $product->getBrandId(),
                 ],
-                'price' => null !== $productPrice ? (float) $productPrice->getPrice() : null,
+                'price' => $optionService->resolveDefaultPrice($product),
                 'currency_symbol' => null !== $defaultCurrency ? $defaultCurrency->getSymbol() : '',
             ]
         );
@@ -159,7 +152,7 @@ class OptionController extends BaseAdminController
         }
 
         $this->setupFormErrorContext(
-            $translator->trans('Option modification'),
+            $translator->trans('Option modification', [], Option::DOMAIN_NAME),
             $errorMessage,
             $changeForm,
             $ex

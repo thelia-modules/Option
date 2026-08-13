@@ -1,7 +1,20 @@
-{# Top-menu entry for the Option module (BO twig). #}
-<li id="option">
-    <a title="{{ 'Options'|trans({}, 'Option') }}" href="/admin/module/Option">
-        <span class="icon-"><span style="top:5px;" class="glyphicon glyphicon-list-alt"></span></span>
-        <span class="item-text">{{ 'Options'|trans({}, 'Option') }}</span>
+{# Side-nav entry for the Option module, injected through the main.in-top-menu-items hook.
+
+   The hook is rendered inside <ul class="nav flex-column"> in _side_nav.html.twig, so the
+   fragment MUST follow the Bootstrap 5 markup the native entries use — <li class="nav-item">
+   plus <a class="nav-link"> — otherwise the item shows up unstyled. Icons come from Bootstrap
+   Icons (bi bi-*); the Bootstrap 3 glyphicon font this template used to reference does not
+   exist in the Twig back-office. #}
+{% set d = 'option' %}
+{% set configure_path = path('admin.module.configure', { module_code: 'Option' }) %}
+{% set current_path = app.request.pathInfo|default('') %}
+{% set is_active = current_path == configure_path or current_path starts with '/admin/option/' %}
+
+<li class="nav-item" id="option">
+    <a class="nav-link {{ is_active ? 'active' : '' }}"
+       title="{{ 'Options'|trans({}, d) }}"
+       href="{{ configure_path }}">
+        <i class="bi bi-list-check me-2" aria-hidden="true"></i>
+        <span class="item-text">{{ 'Options'|trans({}, d) }}</span>
     </a>
 </li>

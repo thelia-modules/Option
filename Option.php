@@ -12,8 +12,14 @@ use Thelia\Module\BaseModule;
 
 class Option extends BaseModule
 {
-    /** @var string */
-    const DOMAIN_NAME = 'Option';
+    /**
+     * Translation domain of the module catalog (I18n/*.php). The core registers it as
+     * strtolower($moduleCode) (see Thelia\Model\Module::getTranslationDomain) and the
+     * translator lookup is case-sensitive, so this must stay lowercase.
+     *
+     * @var string
+     */
+    const DOMAIN_NAME = 'option';
 
     /** @var string  */
     const OPTION_CATEGORY_TITLE = 'option_category_thelia';

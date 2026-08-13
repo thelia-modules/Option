@@ -9,7 +9,7 @@ use Option\Form\CategoryAvailableOptionForm;
 use Option\Model\CategoryAvailableOptionQuery;
 use Option\Model\ProductAvailableOptionQuery;
 use Option\Service\OptionProductService;
-use Propel\Runtime\ActiveQuery\Criteria;
+use Option\Service\OptionService;
 use Thelia\Controller\Admin\BaseAdminController;
 use Thelia\Core\HttpFoundation\Request;
 use Thelia\Core\Security\AccessManager;
@@ -18,7 +18,6 @@ use Thelia\Log\Tlog;
 use Thelia\Model\Category;
 use Thelia\Model\CategoryQuery;
 use Thelia\Model\Product;
-use Thelia\Model\ProductPriceQuery;
 use Thelia\Tools\TokenProvider;
 use Thelia\Tools\URL;
 use Symfony\Component\HttpFoundation\Response;
@@ -28,7 +27,7 @@ use Symfony\Component\Routing\Attribute\Route;
 class CategoryAvailableOptionController extends BaseAdminController
 {
     #[Route('/show/{categoryId}', name: '_option_category_show', methods: 'GET')]
-    public function showCategoryOptionsProduct(int $categoryId): Response
+    public function showCategoryOptionsProduct(int $categoryId, OptionService $optionService): Response
     {
         if (null !== $response = $this->checkAuth(AdminResources::MODULE, 'Option', AccessManager::VIEW)) {
             return $response;
@@ -46,17 +45,12 @@ class CategoryAvailableOptionController extends BaseAdminController
 
             $product->setLocale($locale);
 
-            $productPrice = ProductPriceQuery::create()
-                ->filterByProductSaleElements($product->getDefaultSaleElements())
-                ->orderByCurrencyId(Criteria::ASC)
-                ->findOne();
-
             $attachedOptions[] = [
                 'optionProductId' => $categoryAvailableOption->getOptionId(),
                 'productId' => $product->getId(),
                 'ref' => $product->getRef(),
                 'title' => $product->getTitle(),
-                'price' => null !== $productPrice ? (float) $productPrice->getPrice() : null,
+                'price' => $optionService->resolveDefaultPrice($product),
             ];
         }
 

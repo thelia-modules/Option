@@ -9,16 +9,21 @@ use LogicException;
 use Option\Event\CheckOptionEvent;
 use Option\Model\ProductAvailableOptionQuery;
 use Option\Option as OptionModule;
+use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\Exception\PropelException;
 use Symfony\Component\Form\Form;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Thelia\Core\Event\Product\ProductDeleteEvent;
 use Thelia\Core\Event\TheliaEvents;
+use Thelia\Core\HttpFoundation\Session\Session;
 use Thelia\Core\Translation\Translator;
 use Thelia\Model\Category;
 use Thelia\Model\CategoryQuery;
+use Thelia\Model\Lang;
 use Thelia\Model\Product;
 use Thelia\Model\ProductPrice;
+use Thelia\Model\ProductPriceQuery;
 use Thelia\Domain\Taxation\TaxEngine\TaxEngine;
 
 /**
@@ -34,7 +39,8 @@ class OptionService
     public function __construct(
         protected EventDispatcherInterface $dispatcher,
         protected OptionProvider           $optionProvider,
-        protected TaxEngine $taxEngine
+        protected TaxEngine $taxEngine,
+        protected RequestStack $requestStack
     )
     {}
 
@@ -138,6 +144,37 @@ class OptionService
         $this->dispatcher->dispatch($event, CheckOptionEvent::OPTION_CHECK_IS_VALID);
 
         return false === $event->isValid() ? [] : $event->getOptions();
+    }
+
+    /**
+     * Untaxed price of the product default sale element, in the lowest currency id available.
+     * Used by the back-office listings, where no customer tax context exists.
+     */
+    public function resolveDefaultPrice(Product $product): ?float
+    {
+        $productPrice = ProductPriceQuery::create()
+            ->filterByProductSaleElements($product->getDefaultSaleElements())
+            ->orderByCurrencyId(Criteria::ASC)
+            ->findOne();
+
+        // Propel returns DECIMAL columns as strings.
+        return null !== $productPrice ? (float) $productPrice->getPrice() : null;
+    }
+
+    /**
+     * Locale currently selected in the back-office language switcher.
+     * Falls back to the shop default language outside of an admin session (CLI, front-office).
+     */
+    public function getAdminEditionLocale(): string
+    {
+        $request = $this->requestStack->getCurrentRequest();
+        $session = null !== $request && $request->hasSession() ? $request->getSession() : null;
+
+        if ($session instanceof Session) {
+            return $session->getAdminEditionLang()->getLocale();
+        }
+
+        return Lang::getDefaultLanguage()->getLocale();
     }
 
     public function getOptionPrice(Product $option, bool $isPromo = false, $isTaxed = true): float|int

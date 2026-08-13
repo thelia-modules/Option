@@ -6,20 +6,18 @@ namespace Option\Hook\Back;
 
 use Option\Form\TemplateAvailableOptionForm;
 use Option\Model\TemplateAvailableOptionQuery;
-use Propel\Runtime\ActiveQuery\Criteria;
+use Option\Service\OptionService;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Thelia\Core\Event\Hook\HookRenderEvent;
 use Thelia\Core\Form\TheliaFormFactory;
 use Thelia\Core\Hook\BaseHook;
-use Thelia\Core\HttpFoundation\Session\Session;
 use Thelia\Core\Template\Parser\ParserResolver;
-use Thelia\Model\Lang;
-use Thelia\Model\ProductPriceQuery;
 
 class TemplateEditHook extends BaseHook
 {
     public function __construct(
+        protected OptionService $optionService,
         protected TheliaFormFactory $formFactory,
         ?EventDispatcherInterface $dispatcher = null,
         ?ParserResolver $parserResolver = null,
@@ -42,7 +40,7 @@ class TemplateEditHook extends BaseHook
     public function onTemplateEditBottom(HookRenderEvent $event): void
     {
         $templateId = (int) $event->getArgument('template_id');
-        $locale = $this->getCurrentLocale();
+        $locale = $this->optionService->getAdminEditionLocale();
 
         $attachedOptions = [];
         foreach (TemplateAvailableOptionQuery::create()->filterByTemplateId($templateId)->find() as $templateAvailableOption) {
@@ -54,17 +52,12 @@ class TemplateEditHook extends BaseHook
 
             $product->setLocale($locale);
 
-            $productPrice = ProductPriceQuery::create()
-                ->filterByProductSaleElements($product->getDefaultSaleElements())
-                ->orderByCurrencyId(Criteria::ASC)
-                ->findOne();
-
             $attachedOptions[] = [
                 'optionProductId' => $templateAvailableOption->getOptionId(),
                 'productId' => $product->getId(),
                 'ref' => $product->getRef(),
                 'title' => $product->getTitle(),
-                'price' => null !== $productPrice ? (float) $productPrice->getPrice() : null,
+                'price' => $this->optionService->resolveDefaultPrice($product),
             ];
         }
 
@@ -81,15 +74,5 @@ class TemplateEditHook extends BaseHook
     public function onTemplateEditJs(HookRenderEvent $event): void
     {
         $event->add($this->render('Option/template/template-edit.js.html.twig'));
-    }
-
-    private function getCurrentLocale(): string
-    {
-        $session = $this->getRequest()?->getSession();
-        if ($session instanceof Session) {
-            return $session->getAdminEditionLang()->getLocale();
-        }
-
-        return Lang::getDefaultLanguage()->getLocale();
     }
 }

@@ -8,18 +8,13 @@ use Exception;
 use Option\Form\OptionCreationForm;
 use Option\Model\OptionProductQuery;
 use Option\Service\OptionService;
-use Propel\Runtime\ActiveQuery\Criteria;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Thelia\Core\Event\Hook\HookRenderEvent;
 use Thelia\Core\Form\TheliaFormFactory;
 use Thelia\Core\Hook\BaseHook;
-use Thelia\Core\HttpFoundation\Session\Session;
 use Thelia\Core\Template\Parser\ParserResolver;
 use Thelia\Model\CurrencyQuery;
-use Thelia\Model\Lang;
-use Thelia\Model\Product;
-use Thelia\Model\ProductPriceQuery;
 use Thelia\Model\TaxRuleQuery;
 
 class ConfigurationHook extends BaseHook
@@ -54,7 +49,7 @@ class ConfigurationHook extends BaseHook
     public function onModuleConfiguration(HookRenderEvent $event): void
     {
         $optionCategory = $this->optionService->getOptionCategory();
-        $locale = $this->getCurrentLocale();
+        $locale = $this->optionService->getAdminEditionLocale();
 
         $options = [];
         foreach (OptionProductQuery::create()->find() as $optionProduct) {
@@ -70,7 +65,7 @@ class ConfigurationHook extends BaseHook
                 'ref' => $product->getRef(),
                 'title' => $product->getTitle(),
                 'visible' => (bool) $product->getVisible(),
-                'price' => $this->resolveOptionPrice($product),
+                'price' => $this->optionService->resolveDefaultPrice($product),
             ];
         }
 
@@ -108,25 +103,5 @@ class ConfigurationHook extends BaseHook
     public function onMainTopMenuTools(HookRenderEvent $event): void
     {
         $event->add($this->render('Option/hook/menu-hook.html.twig', $event->getArguments()));
-    }
-
-    private function getCurrentLocale(): string
-    {
-        $session = $this->getRequest()?->getSession();
-        if ($session instanceof Session) {
-            return $session->getAdminEditionLang()->getLocale();
-        }
-
-        return Lang::getDefaultLanguage()->getLocale();
-    }
-
-    private function resolveOptionPrice(Product $product): ?float
-    {
-        $productPrice = ProductPriceQuery::create()
-            ->filterByProductSaleElements($product->getDefaultSaleElements())
-            ->orderByCurrencyId(Criteria::ASC)
-            ->findOne();
-
-        return null !== $productPrice ? (float) $productPrice->getPrice() : null;
     }
 }
