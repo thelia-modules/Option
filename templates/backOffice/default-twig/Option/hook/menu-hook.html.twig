@@ -5,15 +5,22 @@
    plus <a class="nav-link"> — otherwise the item shows up unstyled. Icons come from Bootstrap
    Icons (bi bi-*); the Bootstrap 3 glyphicon font this template used to reference does not
    exist in the Twig back-office. #}
+{# The active state is computed against hardcoded '/admin/...' paths, exactly like the native
+   entries of _side_nav.html.twig: the BO's path() Twig function (TwigEngine URLExtension)
+   generates ABSOLUTE urls, so comparing it to app.request.pathInfo can never match. pathInfo is
+   safe even behind BackOfficePath — the incoming custom prefix is rewritten to /admin before
+   routing, and only the response HTML is rewritten back. /admin/module/Option (reachable through
+   Modules > Configure) shows the same screen, so the entry lights up there too. #}
 {% set d = 'option' %}
-{% set configure_path = path('admin.module.configure', { module_code: 'Option' }) %}
 {% set current_path = app.request.pathInfo|default('') %}
-{% set is_active = current_path == configure_path or current_path starts with '/admin/option/' %}
+{% set is_active = current_path == '/admin/option'
+    or current_path starts with '/admin/option/'
+    or current_path == '/admin/module/Option' %}
 
 <li class="nav-item" id="option">
     <a class="nav-link {{ is_active ? 'active' : '' }}"
        title="{{ 'Options'|trans({}, d) }}"
-       href="{{ configure_path }}">
+       href="{{ path('admin_option_config_view') }}">
         <i class="bi bi-list-check me-2" aria-hidden="true"></i>
         <span class="item-text">{{ 'Options'|trans({}, d) }}</span>
     </a>

@@ -1,7 +1,7 @@
 {% extends "@BackOfficeDefaultTwig/base.html.twig" %}
 {% set d = 'option' %}
 {% set token = attribute(form, '_token') %}
-{% set configure_path = path('admin.module.configure', {module_code: 'Option'}) %}
+{% set configure_path = path('admin_option_config_view') %}
 {% set option_update_path = path('admin_option_update_option_view', {option_id: option.id}) %}
 
 {% block title %}{{ 'Edit option'|trans({}, d) }}{% endblock %}

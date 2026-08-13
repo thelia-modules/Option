@@ -1,0 +1,17 @@
+{% extends "@BackOfficeDefaultTwig/base.html.twig" %}
+{% set d = 'option' %}
+{# Landing on this page (instead of /admin/module/Option) keeps the side-nav's Modules
+   section closed: only the Options entry is active. The listing itself is shared with
+   the module-configuration hook. #}
+{% set return_path = path('admin_option_config_view') %}
+
+{% block title %}{{ 'Options'|trans({}, d) }}{% endblock %}
+
+{% block content %}
+    <h1 class="h4 mb-3">{{ 'Options'|trans({}, d) }}</h1>
+    {% include 'Option/option-configuration.html.twig' %}
+{% endblock %}
+
+{% block scripts_extra %}
+    {% include 'Option/option-configuration.js.html.twig' %}
+{% endblock %}

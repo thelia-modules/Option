@@ -7,6 +7,7 @@ namespace Option\Controller\Back;
 use Exception;
 use Option\Model\OptionProductQuery;
 use Option\Option;
+use Option\Service\OptionConfigurationPresenter;
 use Option\Service\OptionService as OptionService;
 use Propel\Runtime\Exception\PropelException;
 use Thelia\Model\CurrencyQuery;
@@ -34,6 +35,26 @@ use Thelia\Tools\TokenProvider;
 #[Route('/admin/option', name: 'admin_option')]
 class OptionController extends BaseAdminController
 {
+    /**
+     * Standalone module page: same content as the module-configuration hook, but under
+     * /admin/option so the side-nav highlights the Options entry alone (the Modules
+     * section reacts to any /admin/module/* path).
+     *
+     * @throws PropelException
+     */
+    #[Route('', name: '_config_view', methods: 'GET')]
+    public function configurationView(OptionConfigurationPresenter $configurationPresenter): Response
+    {
+        if (null !== $response = $this->checkAuth(AdminResources::MODULE, 'Option', AccessManager::VIEW)) {
+            return $response;
+        }
+
+        return $this->render(
+            'configuration/option-configuration-page',
+            $configurationPresenter->present()
+        );
+    }
+
     #[Route('/create', name: '_create_option', methods: 'POST')]
     public function createOption(
         OptionService $optionService,
@@ -189,7 +210,7 @@ class OptionController extends BaseAdminController
 
         $optionService->deleteOption($productId);
 
-        return $this->generateRedirect('/admin/module/Option');
+        return $this->generateRedirect('/admin/option');
     }
 
     /**

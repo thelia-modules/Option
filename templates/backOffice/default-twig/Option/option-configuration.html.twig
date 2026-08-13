@@ -1,7 +1,9 @@
 {# Option module configuration page — list of option-products + create/delete (BO twig). #}
 {% set d = 'option' %}
 {% set token = attribute(creationForm, '_token') %}
-{% set configure_path = path('admin.module.configure', {module_code: 'Option'}) %}
+{# return_path: where create success/error sends the admin back — the standalone
+   /admin/option page sets it; the module-configuration hook falls back to its own URL. #}
+{% set return_path = return_path|default(path('admin.module.configure', {module_code: 'Option'})) %}
 
 <div class="option-configuration">
     <div class="card mb-4">
@@ -79,12 +81,12 @@
             <div class="modal-dialog">
                 <form method="post" action="{{ path('admin_option_create_option') }}">
                     <input type="hidden" name="{{ token.vars.full_name }}" value="{{ token.vars.value }}">
-                    <input type="hidden" name="{{ creationForm.success_url.vars.full_name }}" value="{{ configure_path }}">
-                    <input type="hidden" name="{{ creationForm.error_url.vars.full_name }}" value="{{ configure_path }}">
+                    <input type="hidden" name="{{ creationForm.success_url.vars.full_name }}" value="{{ return_path }}">
+                    <input type="hidden" name="{{ creationForm.error_url.vars.full_name }}" value="{{ return_path }}">
                     <input type="hidden" name="{{ creationForm.locale.vars.full_name }}" value="{{ locale }}">
                     <input type="hidden" name="{{ creationForm.default_category.vars.full_name }}" value="{{ category_id }}">
                     <input type="hidden" name="{{ creationForm.currency.vars.full_name }}" value="{{ currency_id }}">
-                    <input type="hidden" name="{{ creationForm.template_id.vars.full_name }}" value="0">
+                    {# no template_id field: product.template_id is a nullable FK, posting 0 breaks the insert #}
                     <input type="hidden" name="{{ creationForm.visible.vars.full_name }}" value="1">
                     <input type="hidden" name="{{ creationForm.virtual.vars.full_name }}" value="0">
                     <input type="hidden" name="{{ creationForm.quantity.vars.full_name }}" value="0">
