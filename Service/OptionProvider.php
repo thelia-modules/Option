@@ -48,7 +48,7 @@ class OptionProvider
             ->setCurrencyId($formData['currency'])
             ->setTaxRuleId($formData['tax_rule'])
             ->setBaseQuantity($formData['quantity'])
-            ->setTemplateId($formData['template_id'])
+            ->setTemplateId($formData['template_id'] ?: null)
             ->setIsOption(true);
     }
 
