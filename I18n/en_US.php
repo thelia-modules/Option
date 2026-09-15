@@ -29,6 +29,8 @@ return [
     'Edit option' => 'Edit option',
     'Edit prices in the product editor' => 'Edit prices in the product editor',
     'Edit this option' => 'Edit this option',
+    'Every available option is already attached to this category.' => 'Every available option is already attached to this category.',
+    'Every available option is already attached to this product.' => 'Every available option is already attached to this product.',
     'General' => 'General',
     'ID' => 'ID',
     'Manage the paid options for products using this template.' => 'Manage the paid options for products using this template.',

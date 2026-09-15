@@ -2,17 +2,25 @@
 
 declare(strict_types=1);
 
+/*
+ * This file is part of the Thelia package.
+ * http://www.thelia.net
+ *
+ * (c) OpenStudio <info@thelia.net>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Option\Controller\Back;
 
-use Exception;
+use Option\Form\OptionCreationForm;
+use Option\Form\OptionModificationForm;
 use Option\Model\OptionProductQuery;
 use Option\Option;
-use Option\Service\OptionService as OptionService;
+use Option\Service\OptionService;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\Exception\PropelException;
-use Thelia\Model\CurrencyQuery;
-use Thelia\Model\ProductPriceQuery;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -22,15 +30,14 @@ use Thelia\Core\HttpFoundation\Request;
 use Thelia\Core\Security\AccessManager;
 use Thelia\Core\Security\Exception\TokenAuthenticationException;
 use Thelia\Core\Security\Resource\AdminResources;
-use Thelia\Core\Template\ParserContext;
 use Thelia\Core\Translation\Translator;
-use Option\Form\OptionCreationForm;
-use Option\Form\OptionModificationForm;
+use Thelia\Domain\Taxation\TaxEngine\Calculator;
 use Thelia\Form\Exception\FormValidationException;
 use Thelia\Model\Country;
+use Thelia\Model\CurrencyQuery;
+use Thelia\Model\ProductPriceQuery;
 use Thelia\Model\ProductQuery;
 use Thelia\Model\TaxRuleQuery;
-use Thelia\Domain\Taxation\TaxEngine\Calculator;
 use Thelia\Tools\TokenProvider;
 
 #[Route('/admin/option', name: 'admin_option')]
@@ -39,9 +46,8 @@ class OptionController extends BaseAdminController
     #[Route('/create', name: '_create_option', methods: 'POST')]
     public function createOption(
         OptionService $optionService,
-        Translator    $translator
-    ): Response
-    {
+        Translator $translator,
+    ): Response {
         if (null !== $response = $this->checkAuth(AdminResources::MODULE, 'Option', AccessManager::CREATE)) {
             return $response;
         }
@@ -52,10 +58,9 @@ class OptionController extends BaseAdminController
             $optionService->createOption($this->validateForm($creationForm, 'POST'));
 
             return $this->generateSuccessRedirect($creationForm);
-
         } catch (FormValidationException $ex) {
             $errorMessage = $this->createStandardFormValidationErrorMessage($ex);
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             $errorMessage = $ex->getMessage();
         }
 
@@ -131,9 +136,8 @@ class OptionController extends BaseAdminController
     #[Route('/update', name: '_update_option_process', methods: 'POST')]
     public function updateOptionProcess(
         TranslatorInterface $translator,
-        OptionService       $optionService,
-    ): Response
-    {
+        OptionService $optionService,
+    ): Response {
         if (null !== $response = $this->checkAuth(AdminResources::MODULE, 'Option', AccessManager::UPDATE)) {
             return $response;
         }
@@ -154,12 +158,12 @@ class OptionController extends BaseAdminController
             return $this->generateSuccessRedirect($changeForm);
         } catch (FormValidationException $ex) {
             $errorMessage = $this->createStandardFormValidationErrorMessage($ex);
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             $errorMessage = $ex->getMessage();
         }
 
         $this->setupFormErrorContext(
-            $translator->trans('Option modification'),
+            $translator->trans('Option modification', [], Option::DOMAIN_NAME),
             $errorMessage,
             $changeForm,
             $ex
@@ -173,11 +177,10 @@ class OptionController extends BaseAdminController
      */
     #[Route('/delete', name: '_delete_option', methods: 'POST')]
     public function deleteOption(
-        Request       $request,
+        Request $request,
         TokenProvider $tokenProvider,
-        OptionService $optionService
-    ): Response
-    {
+        OptionService $optionService,
+    ): Response {
         if (null !== $response = $this->checkAuth(AdminResources::MODULE, 'Option', AccessManager::DELETE)) {
             return $response;
         }
@@ -209,8 +212,8 @@ class OptionController extends BaseAdminController
             return $response;
         }
 
-        $price = (float)($request->query->get('price'));
-        $tax_rule_id = (int)($request->query->get('tax_rule'));
+        $price = (float) $request->query->get('price');
+        $tax_rule_id = (int) $request->query->get('tax_rule');
         $action = $request->query->get('action');
 
         $taxRule = TaxRuleQuery::create()->findPk($tax_rule_id);
@@ -218,7 +221,7 @@ class OptionController extends BaseAdminController
         if (!$price || !$taxRule) {
             return new JsonResponse(
                 [
-                    'result' => (float)number_format(0, 6, '.', '')
+                    'result' => (float) number_format(0, 6, '.', ''),
                 ]
             );
         }
@@ -242,7 +245,7 @@ class OptionController extends BaseAdminController
 
         return new JsonResponse(
             [
-                'result' => (float)number_format($return_price, 6, '.', '')
+                'result' => (float) number_format($return_price, 6, '.', ''),
             ]
         );
     }

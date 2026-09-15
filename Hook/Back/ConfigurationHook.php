@@ -2,9 +2,18 @@
 
 declare(strict_types=1);
 
+/*
+ * This file is part of the Thelia package.
+ * http://www.thelia.net
+ *
+ * (c) OpenStudio <info@thelia.net>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Option\Hook\Back;
 
-use Exception;
 use Option\Form\OptionCreationForm;
 use Option\Model\OptionProductQuery;
 use Option\Service\OptionService;
@@ -49,12 +58,12 @@ class ConfigurationHook extends BaseHook
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     public function onModuleConfiguration(HookRenderEvent $event): void
     {
-        $optionCategory = $this->optionService->getOptionCategory();
         $locale = $this->getCurrentLocale();
+        $optionCategory = $this->optionService->getOptionCategory($locale);
 
         $options = [];
         foreach (OptionProductQuery::create()->find() as $optionProduct) {

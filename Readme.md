@@ -49,24 +49,54 @@ class OptionKnifeTextForm extends BaseOptionFrontForm
 
 Front-End Application
 
-Two routes are available to manipulate options and products in the shopping cart.
-
-See OpenApi doc : 
-```plaintext
-GET /open_api/doc
-```
-
-List options for a product selling unit (pse):
+The options of a product are exposed as an API Platform resource. See the API doc:
 
 ```plaintext
-GET /open_api/option/get/{pseId}
+GET /api/docs
 ```
 
-Add one or more options to a cart item :
+List the options a product accepts, from the product or from one of its sale elements.
+Only options flagged visible in the back-office are returned, with both untaxed and
+taxed prices:
 
 ```plaintext
-POST /open_api/option/add/{cartItemId}
+GET /api/front/options?productId={productId}
+GET /api/front/options?pseId={pseId}
+GET /api/front/options/{optionId}
 ```
+
+The options carried by a cart item are read on the cart payloads of the core, under
+the `CartItemOptions` key of each cart item:
+
+```plaintext
+GET /api/front/cart
+GET /api/front/cart_items/{id}
+```
+
+```json
+{
+  "id": 19,
+  "quantity": 1,
+  "CartItemOptions": {
+    "options": [
+      {
+        "optionId": 1,
+        "ref": "OPTION_REF",
+        "title": "Gift wrap",
+        "price": 96.0,
+        "taxedPrice": 115.2,
+        "quantity": 1.0,
+        "customization": {"message": "Happy birthday"}
+      }
+    ]
+  }
+}
+```
+
+Writing options onto a cart item is not exposed yet: the endpoint that validated the
+customization form of each option and adjusted the price of the cart line has not been
+ported. `CartItemOptions` is read-only, and a payload carrying it is rejected with a
+400.
 
 
 ## Hook
