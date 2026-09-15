@@ -8,6 +8,8 @@ use Exception;
 use Option\Form\CategoryAvailableOptionForm;
 use Option\Model\CategoryAvailableOptionQuery;
 use Option\Model\ProductAvailableOptionQuery;
+use Option\Option;
+use Option\Service\Back\OptionTabContextService;
 use Option\Service\OptionProductService;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Thelia\Controller\Admin\BaseAdminController;
@@ -28,43 +30,17 @@ use Symfony\Component\Routing\Attribute\Route;
 class CategoryAvailableOptionController extends BaseAdminController
 {
     #[Route('/show/{categoryId}', name: '_option_category_show', methods: 'GET')]
-    public function showCategoryOptionsProduct(int $categoryId): Response
+    public function showCategoryOptionsProduct(OptionTabContextService $tabContext, int $categoryId): Response
     {
         if (null !== $response = $this->checkAuth(AdminResources::MODULE, 'Option', AccessManager::VIEW)) {
             return $response;
-        }
-
-        $locale = $this->getCurrentEditionLocale();
-
-        $attachedOptions = [];
-        foreach (CategoryAvailableOptionQuery::create()->filterByCategoryId($categoryId)->find() as $categoryAvailableOption) {
-            $optionProduct = $categoryAvailableOption->getOptionProduct();
-            $product = null !== $optionProduct ? $optionProduct->getProduct() : null;
-            if (null === $product) {
-                continue;
-            }
-
-            $product->setLocale($locale);
-
-            $productPrice = ProductPriceQuery::create()
-                ->filterByProductSaleElements($product->getDefaultSaleElements())
-                ->orderByCurrencyId(Criteria::ASC)
-                ->findOne();
-
-            $attachedOptions[] = [
-                'optionProductId' => $categoryAvailableOption->getOptionId(),
-                'productId' => $product->getId(),
-                'ref' => $product->getRef(),
-                'title' => $product->getTitle(),
-                'price' => null !== $productPrice ? (float) $productPrice->getPrice() : null,
-            ];
         }
 
         return $this->render(
             'category/category-option-tab',
             [
                 'category_id' => $categoryId,
-                'attached_options' => $attachedOptions,
+                'attached_options' => $tabContext->attachedToCategory($categoryId),
                 'form' => $this->createForm(CategoryAvailableOptionForm::class)->createView()->getView(),
             ]
         );
@@ -84,7 +60,7 @@ class CategoryAvailableOptionController extends BaseAdminController
             $data = $viewForm->getData();
 
             $category = CategoryQuery::create()->findPk($data['category_id']);
-            $optionProductService->setOptionOnCategoryProducts($category, $data['option_id']);
+            $optionProductService->setOptionOnCategoryProducts($category, (int) $data['option_id']);
 
             return $this->generateSuccessRedirect($form);
         } catch (Exception $ex) {
@@ -121,14 +97,14 @@ class CategoryAvailableOptionController extends BaseAdminController
             }
 
             $category = CategoryQuery::create()->findPk($categoryId);
-            $optionProductService->deleteOptionOnCategoryTree($category, $optionProductId, $deleteAll);
+            $optionProductService->deleteOptionOnCategoryTree($category, (int) $optionProductId, (bool) $deleteAll);
 
         } catch (Exception $ex) {
             Tlog::getInstance()->addError($ex->getMessage());
         }
 
         return $this->generateRedirect(URL::getInstance()->absoluteUrl('/admin/categories/update', [
-            "current_tab" => "category_option_tab",
+            "current_tab" => Option::CATEGORY_OPTION_TAB_ID,
             "category_id" => $categoryId
         ]));
     }

@@ -29,6 +29,8 @@ return [
     'Edit option' => "Modifier l'option",
     'Edit prices in the product editor' => "Modifier les prix dans l'éditeur de produit",
     'Edit this option' => 'Modifier cette option',
+    'Every available option is already attached to this category.' => 'Toutes les options disponibles sont déjà attachées à cette catégorie.',
+    'Every available option is already attached to this product.' => 'Toutes les options disponibles sont déjà attachées à ce produit.',
     'General' => 'Général',
     'ID' => 'ID',
     'Manage the paid options for products using this template.' => 'Gérez les options payantes des produits utilisant ce gabarit.',

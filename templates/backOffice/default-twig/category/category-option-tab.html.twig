@@ -1,28 +1,37 @@
 {# Options tab content for the category edit page (BO twig). #}
-{% set d = 'Option' %}
-{% set token = attribute(form, '_token') %}
+{% set d = 'option' %}
 
 <div class="option-category-tab">
     <h4 class="mb-3">{{ 'Paid options management'|trans({}, d) }}</h4>
 
     {% if is_granted('UPDATE', {resource: 'admin.module', module: 'Option'}) %}
-        <form method="post" action="{{ path('admin_option_category_option_category_set') }}" class="mb-4">
-            <input type="hidden" name="{{ token.vars.full_name }}" value="{{ token.vars.value }}">
-            <input type="hidden" name="{{ form.category_id.vars.full_name }}" value="{{ category_id }}">
-            <input type="hidden" name="{{ form.success_url.vars.full_name }}" value="/admin/categories/update?current_tab=category_option_tab&category_id={{ category_id }}">
-            <input type="hidden" name="{{ form.error_url.vars.full_name }}" value="/admin/categories/update?current_tab=category_option_tab&category_id={{ category_id }}">
-            <label class="form-label">{{ 'Available options'|trans({}, d) }}</label>
-            <div class="input-group">
-                <select name="{{ form.option_id.vars.full_name }}" required class="form-select">
-                    <option value="" selected disabled>{{ 'Choose an option...'|trans({}, d) }}</option>
-                    {% for choice in form.option_id.vars.choices %}
-                        <option value="{{ choice.value }}">{{ choice.label }}</option>
-                    {% endfor %}
-                </select>
+
+        {# The form only lists the options this category does not already carry. #}
+        {% set form = getForm('category_available_option_form', {category_id: category_id}) %}
+        {% form_theme form with bo_form_themes only %}
+
+        {% if form.option_id.vars.choices is empty %}
+            <div class="alert alert-secondary mb-4">{{ 'Every available option is already attached to this category.'|trans({}, d) }}</div>
+        {% else %}
+            {{ form_start(form, {
+                action: path('admin_option_category_option_category_set'),
+                method: 'POST',
+                attr :{ class: 'mb-4'}
+            }) }}
+
+            <input type="hidden" name="{{ field_name(form.category_id) }}" value="{{ category_id }}">
+            <input type="hidden" name="{{ field_name(form.success_url) }}" value="{{ redirect_url }}">
+            <input type="hidden" name="{{ field_name(form.error_url) }}" value="{{ redirect_url }}">
+
+            {{form_rest(form) }}
+
+             <div class="input-group">
                 <button class="btn btn-primary" type="submit">{{ 'Apply'|trans({}, d) }}</button>
             </div>
-            <small class="text-muted">{{ 'The option will be applied to all products of this category.'|trans({}, d) }}</small>
-        </form>
+
+            {{form_end(form) }}
+        {% endif %}
+
     {% endif %}
 
     {% if attached_options|length %}
@@ -45,6 +54,8 @@
                                   class="d-inline" onsubmit="return confirm('{{ 'Remove this option from the category products?'|trans({}, d) }}')">
                                 <input type="hidden" name="option_product_id" value="{{ option.optionProductId }}">
                                 <input type="hidden" name="category_id" value="{{ category_id }}">
+                                <input type="hidden" name="{{ field_name(form.success_url) }}" value="{{ redirect_url }}">
+                                <input type="hidden" name="{{ field_name(form.error_url) }}" value="{{ redirect_url }}">
                                 <input type="hidden" name="delete_all" value="0">
                                 <button type="submit" class="btn btn-danger btn-sm" title="{{ 'Delete this option'|trans({}, d) }}">
                                     <i class="bi bi-trash"></i>

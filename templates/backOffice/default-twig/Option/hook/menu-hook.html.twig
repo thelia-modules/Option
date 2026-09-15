@@ -1,7 +1,7 @@
-{# Top-menu entry for the Option module (BO twig). #}
-<li id="option">
-    <a title="{{ 'Options'|trans({}, 'Option') }}" href="/admin/module/Option">
-        <span class="icon-"><span style="top:5px;" class="glyphicon glyphicon-list-alt"></span></span>
-        <span class="item-text">{{ 'Options'|trans({}, 'Option') }}</span>
+{% set d = 'option' %}
+<li class="nav-item" data-testid="bo-nav-option">
+    <a title="{{ 'Options'|trans({}, d) }}" href="/admin/module/Option" class="nav-link">
+        <i class="bi bi-bag-plus-fill"></i>
+        <span class="item-text">{{ 'Options'|trans({}, d) }}</span>
     </a>
 </li>

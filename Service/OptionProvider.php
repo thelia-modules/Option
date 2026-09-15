@@ -48,7 +48,10 @@ class OptionProvider
             ->setCurrencyId($formData['currency'])
             ->setTaxRuleId($formData['tax_rule'])
             ->setBaseQuantity($formData['quantity'])
-            ->setTemplateId($formData['template_id'])
+            // An option is a standalone product: it has no product template. A 0 here
+            // is not "no template", it is a row that does not exist, and product.template_id
+            // is a foreign key.
+            ->setTemplateId($formData['template_id'] ?: null)
             ->setIsOption(true);
     }
 
