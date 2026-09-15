@@ -1,0 +1,20 @@
+{% set d = 'option' %}
+
+<section class="ProductOptions" data-testid="product-options">
+    <h2 class="ProductOptions-title">{{ 'Available options'|trans({}, d) }}</h2>
+    <ul class="ProductOptions-list">
+        {% for option in options %}
+            <li class="ProductOptions-item">
+                <div class="ProductOptions-body">
+                    <span class="ProductOptions-name">{{ option.title ?: option.ref }}</span>
+                    {% if option.chapo %}
+                        <p class="ProductOptions-chapo">{{ option.chapo }}</p>
+                    {% endif %}
+                </div>
+                <span class="ProductOptions-price">
+                    <span class="ProductOptions-priceCurrent">{{ option.price|format_currency('EUR', locale: lang_code) }}</span>
+                </span>
+            </li>
+        {% endfor %}
+    </ul>
+</section>
