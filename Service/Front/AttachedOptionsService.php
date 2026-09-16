@@ -16,6 +16,8 @@ namespace Option\Service\Front;
 
 use Option\Model\OptionCartItemOrderProduct;
 use Option\Model\OptionCartItemOrderProductQuery;
+use Thelia\Model\CartItemQuery;
+use Thelia\Model\OrderProductQuery;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Thelia\Core\HttpFoundation\Session\Session;
 use Thelia\Model\Lang;
@@ -37,6 +39,16 @@ use Thelia\Model\ProductQuery;
  * order, OptionOrderProductService gives each option its own order line and subtracts it
  * from the host line, so the same figures are a cross-reference, not a breakdown. Callers
  * have to say which, and the templates label them differently.
+ *
+ * They differ in tax, too, and that is why each caller states which price it wants. A cart
+ * card prices a line with CartItem::getTaxedPrice(), an order card prints order_product's
+ * own price, which is untaxed. An option quoted on the wrong basis does not merely look
+ * odd: it stops adding up to the total shown beside it.
+ *
+ * What is returned is the amount for the whole line, option price times the quantity of
+ * the line it hangs on — an option is bought once per unit, never once per order. The
+ * quantity travels with it so the template can say so: the cards beside it print a unit
+ * price, and a line amount presented as if it were one would mislead.
  */
 final readonly class AttachedOptionsService
 {
@@ -48,7 +60,7 @@ final readonly class AttachedOptionsService
     /**
      * Options attached to a cart line.
      *
-     * @return list<array{id: int, title: string, value: ?string, price: float}>
+     * @return list<array{id: int, title: string, value: ?string, price: float, quantity: int}>
      */
     public function forCartItem(int $cartItemId): array
     {
@@ -56,15 +68,23 @@ final readonly class AttachedOptionsService
             return [];
         }
 
+        // Read from the cart line rather than from the snapshot the option row keeps:
+        // that one is written when the option is attached and never again, so it lies as
+        // soon as the customer changes the quantity.
+        $quantity = (int) (CartItemQuery::create()->findPk($cartItemId)?->getQuantity() ?? 1);
+
+        // Taxed: the cart cards beside these figures are priced with getTaxedPrice().
         return $this->rows(
-            OptionCartItemOrderProductQuery::create()->filterByCartItemOptionId($cartItemId)->find()
+            OptionCartItemOrderProductQuery::create()->filterByCartItemOptionId($cartItemId)->find(),
+            taxed: true,
+            quantity: $quantity
         );
     }
 
     /**
      * Options attached to an order line, read from the line they were bought under.
      *
-     * @return list<array{id: int, title: string, value: ?string, price: float}>
+     * @return list<array{id: int, title: string, value: ?string, price: float, quantity: int}>
      */
     public function forHostOrderProduct(int $orderProductId): array
     {
@@ -72,42 +92,33 @@ final readonly class AttachedOptionsService
             return [];
         }
 
+        // An option line is created with the quantity of the line it hangs on, so the
+        // host is the one source both agree with.
+        $quantity = (int) (OrderProductQuery::create()->findPk($orderProductId)?->getQuantity() ?? 1);
+
+        // Untaxed: an order card prints order_product.price, and the subtotal under the
+        // list is the sum of those. Quoting the taxed figure here would show an option
+        // the customer could not find in any total on the page.
         return $this->rows(
-            OptionCartItemOrderProductQuery::create()->filterByOrderProductId($orderProductId)->find()
+            OptionCartItemOrderProductQuery::create()->filterByOrderProductId($orderProductId)->find(),
+            taxed: false,
+            quantity: $quantity
         );
-    }
-
-    /**
-     * The text the customer typed, read from the order line the option became.
-     *
-     * Answers null for any other line, which is what tells an option line apart from an
-     * ordinary one: the front has nothing else to go on, the order carries no flag.
-     */
-    public function customizationForOptionOrderProduct(int $orderProductId): ?string
-    {
-        if ($orderProductId <= 0) {
-            return null;
-        }
-
-        $optionLine = OptionCartItemOrderProductQuery::create()
-            ->filterByOptionOrderProductId($orderProductId)
-            ->findOne();
-
-        return null === $optionLine ? null : $this->customizationValue($optionLine);
     }
 
     /**
      * @param iterable<OptionCartItemOrderProduct> $attached
      *
-     * @return list<array{id: int, title: string, value: ?string, price: float}>
+     * @return list<array{id: int, title: string, value: ?string, price: float, quantity: int}>
      */
-    private function rows(iterable $attached): array
+    private function rows(iterable $attached, bool $taxed, int $quantity): array
     {
         $locale = $this->currentLocale();
+        $quantity = max(1, $quantity);
         $rows = [];
 
         foreach ($attached as $optionLine) {
-            $row = $this->row($optionLine, $locale);
+            $row = $this->row($optionLine, $locale, $taxed, $quantity);
 
             if (null !== $row) {
                 $rows[] = $row;
@@ -118,9 +129,9 @@ final readonly class AttachedOptionsService
     }
 
     /**
-     * @return array{id: int, title: string, value: ?string, price: float}|null
+     * @return array{id: int, title: string, value: ?string, price: float, quantity: int}|null
      */
-    private function row(OptionCartItemOrderProduct $optionLine, string $locale): ?array
+    private function row(OptionCartItemOrderProduct $optionLine, string $locale, bool $taxed, int $quantity): ?array
     {
         // The row keeps its foreign key nullable and ON DELETE SET NULL: an option the
         // merchant removed from the catalogue leaves a line behind with nothing to name
@@ -152,8 +163,10 @@ final readonly class AttachedOptionsService
             'id' => (int) $optionProduct->getId(),
             'title' => (string) ($product->getTitle() ?: $product->getRef()),
             'value' => $this->customizationValue($optionLine),
-            // A DECIMAL column comes back as a string.
-            'price' => (float) $optionLine->getTaxedPrice(),
+            // A DECIMAL column comes back as a string. Multiplied here rather than in the
+            // template: the amount and the quantity it covers must not be able to drift.
+            'price' => (float) ($taxed ? $optionLine->getTaxedPrice() : $optionLine->getPrice()) * $quantity,
+            'quantity' => $quantity,
         ];
     }
 
