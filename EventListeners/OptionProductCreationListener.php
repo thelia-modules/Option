@@ -25,6 +25,7 @@ class OptionProductCreationListener implements EventSubscriberInterface
         OptionProductQuery::create()
             ->filterByProductId($event->getProduct()->getId())
             ->findOneOrCreate()
+            ->setIsCustomizable($event->isCustomizable())
             ->save();
     }
 

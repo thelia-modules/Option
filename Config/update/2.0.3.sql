@@ -1,0 +1,3 @@
+SET FOREIGN_KEY_CHECKS = 0;
+ALTER TABLE `option_product` ADD COLUMN `is_customizable` TINYINT(1) DEFAULT 0 NOT NULL AFTER `product_id`;
+SET FOREIGN_KEY_CHECKS = 1;

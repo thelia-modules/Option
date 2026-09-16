@@ -43,6 +43,8 @@ return [
     'Option modification' => "Modification d'option",
     'Option reference' => "Référence de l'option",
     'Option title' => "Titre de l'option",
+    'Customizable option' => 'Option personnalisable',
+    'The customer fills in a value for this option when adding it to the cart.' => "Le client saisit une valeur pour cette option au moment de l'ajout au panier.",
     'Options' => 'Options',
     'Paid options' => 'Options payantes',
     'Paid options management' => 'Gestion des options payantes',

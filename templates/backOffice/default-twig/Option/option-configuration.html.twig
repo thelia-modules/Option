@@ -131,6 +131,14 @@
                                 <label class="form-label">{{ 'Price'|trans({}, d) }} ({{ currency_symbol }}) *</label>
                                 <input type="text" class="form-control" required name="{{ creationForm.price.vars.full_name }}" value="{{ creationForm.price.vars.value ?: 0 }}">
                             </div>
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="option-create-is-customizable"
+                                       name="{{ creationForm.is_customizable.vars.full_name }}"
+                                       value="{{ creationForm.is_customizable.vars.value }}"
+                                       {{ creationForm.is_customizable.vars.checked ? 'checked' : '' }}>
+                                <label class="form-check-label" for="option-create-is-customizable">{{ 'Customizable option'|trans({}, d) }}</label>
+                                <div class="form-text">{{ 'The customer fills in a value for this option when adding it to the cart.'|trans({}, d) }}</div>
+                            </div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ 'Cancel'|trans({}, d) }}</button>

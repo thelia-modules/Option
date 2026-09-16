@@ -52,7 +52,8 @@ class OptionProvider
             // is not "no template", it is a row that does not exist, and product.template_id
             // is a foreign key.
             ->setTemplateId($formData['template_id'] ?: null)
-            ->setIsOption(true);
+            ->setIsOption(true)
+            ->setIsCustomizable((bool) ($formData['is_customizable'] ?? false));
     }
 
     public function getUpdateEvent(array $formData): ProductUpdateEvent

@@ -43,6 +43,8 @@ return [
     'Option modification' => 'Option modification',
     'Option reference' => 'Option reference',
     'Option title' => 'Option title',
+    'Customizable option' => 'Customizable option',
+    'The customer fills in a value for this option when adding it to the cart.' => 'The customer fills in a value for this option when adding it to the cart.',
     'Options' => 'Options',
     'Paid options' => 'Paid options',
     'Paid options management' => 'Paid options management',
