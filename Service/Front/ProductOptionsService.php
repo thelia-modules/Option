@@ -40,7 +40,7 @@ final readonly class ProductOptionsService
     }
 
     /**
-     * @return list<array{id: int, ref: string, title: ?string, chapo: ?string, price: float, promoPrice: float, promo: bool}>
+     * @return list<array{id: int, ref: string, title: ?string, chapo: ?string, price: float, promoPrice: float, promo: bool, customizable: bool}>
      */
     public function forProduct(int $productId): array
     {
@@ -69,7 +69,7 @@ final readonly class ProductOptionsService
     }
 
     /**
-     * @return array{id: int, ref: string, title: ?string, chapo: ?string, price: float, promoPrice: float, promo: bool}|null
+     * @return array{id: int, ref: string, title: ?string, chapo: ?string, price: float, promoPrice: float, promo: bool, customizable: bool}|null
      */
     private function row(mixed $optionProduct, string $locale): ?array
     {
@@ -111,6 +111,7 @@ final readonly class ProductOptionsService
             'price' => (float) $this->optionService->getOptionTaxedPrice($option),
             'promoPrice' => (float) $this->optionService->getOptionTaxedPrice($option, true),
             'promo' => (bool) $defaultPse->getPromo(),
+            'customizable' => (bool) $optionProduct->getIsCustomizable(),
         ];
     }
 
