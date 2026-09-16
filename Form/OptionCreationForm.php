@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Option\Form;
 
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -36,6 +37,7 @@ class OptionCreationForm extends BaseForm
             ->add('quantity', IntegerType::class, ['required' => false])
             ->add('visible', IntegerType::class, ['required' => false])
             ->add('virtual', IntegerType::class, ['required' => false])
-            ->add('template_id', IntegerType::class, ['required' => false]);
+            ->add('template_id', IntegerType::class, ['required' => false])
+            ->add('is_customizable', CheckboxType::class, ['required' => false]);
     }
 }

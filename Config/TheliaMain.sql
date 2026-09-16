@@ -13,6 +13,7 @@ CREATE TABLE `option_product`
 (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `product_id` INTEGER NOT NULL,
+    `is_customizable` TINYINT(1) DEFAULT 0 NOT NULL,
     PRIMARY KEY (`id`),
     INDEX `fi_option_product_product_id` (`product_id`),
     CONSTRAINT `fk_option_product_product_id`
