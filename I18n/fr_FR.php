@@ -19,7 +19,6 @@ return [
     'Available options' => 'Options disponibles',
     'Included options:' => 'Options incluses :',
     'Options ordered with this product:' => 'Options commandées avec ce produit :',
-    'Your customization:' => 'Votre personnalisation :',
     'Cancel' => 'Annuler',
     'Choose an option...' => 'Choisir une option...',
     'Close' => 'Fermer',

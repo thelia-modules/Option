@@ -19,7 +19,6 @@ return [
     'Available options' => 'Available options',
     'Included options:' => 'Included options:',
     'Options ordered with this product:' => 'Options ordered with this product:',
-    'Your customization:' => 'Your customization:',
     'Cancel' => 'Cancel',
     'Choose an option...' => 'Choose an option...',
     'Close' => 'Close',

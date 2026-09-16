@@ -22,13 +22,13 @@ use Twig\Environment;
  * What the module has to say about an order line, under it.
  *
  * Placing an order splits an option off its product: OptionOrderProductService gives each
- * one its own order line and subtracts its amount from the host. A line reaching this hook
- * is therefore one of two things, and it gets a different answer either way:
+ * one its own order line and subtracts its amount from the host. OrderOptionLinesFilter
+ * then keeps those lines out of what a front page reads, so the only line reaching this
+ * hook is the one options were bought under, and what it gets is the list of them — with
+ * the text the customer typed, which the order records nowhere else.
  *
- *  - the line an option became: the text the customer typed, which the order stores
- *    nowhere else — the line carries the option's name, never its content;
- *  - the line options were bought under: the list of those options, as a cross-reference.
- *    Not called "included", because the price shown on that card no longer contains them.
+ * Deliberately not called "included": the price shown on that card no longer contains
+ * them, the option lines do.
  *
  * The theme declares the point with
  * theme_hook('account-order.item.bottom', {order: order, orderProduct: line.orderProduct}).
@@ -57,16 +57,6 @@ final readonly class OrderProductOptionsHook implements ThemeHookInterface
 
         if ($orderProductId <= 0) {
             return '';
-        }
-
-        // Asked first: an option line is never also a host line, and answering it here
-        // saves the second query on every one of them.
-        $customization = $this->attachedOptions->customizationForOptionOrderProduct($orderProductId);
-
-        if (null !== $customization) {
-            return $this->twig->render('@OptionModule/theme_hook/order_product_customization.html.twig', [
-                'value' => $customization,
-            ]);
         }
 
         $options = $this->attachedOptions->forHostOrderProduct($orderProductId);
