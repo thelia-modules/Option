@@ -2,6 +2,16 @@
 
 declare(strict_types=1);
 
+/*
+ * This file is part of the Thelia package.
+ * http://www.thelia.net
+ *
+ * (c) OpenStudio <info@thelia.net>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Option\Service\Front;
 
 use Option\Model\OptionCartItemOrderProduct;
@@ -11,6 +21,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Thelia\Core\Translation\Translator;
+use Thelia\Domain\Taxation\TaxEngine\Calculator;
 use Thelia\Model\ConfigQuery;
 use Thelia\Model\Order;
 use Thelia\Model\OrderAddressQuery;
@@ -20,7 +31,6 @@ use Thelia\Model\Product;
 use Thelia\Model\ProductQuery;
 use Thelia\Model\TaxRule;
 use Thelia\Model\TaxRuleQuery;
-use Thelia\Domain\Taxation\TaxEngine\Calculator;
 use Thelia\Tools\I18n;
 
 class OptionOrderProductService
@@ -50,7 +60,7 @@ class OptionOrderProductService
         $placedOrder = $orderProduct->getOrder();
         $product = ProductQuery::create()->filterByRef($orderProduct->getProductRef())->findOne();
 
-        //prevent event loop on OrderProductEvent::POST_SAVE
+        // prevent event loop on OrderProductEvent::POST_SAVE
         if (!$product) {
             return;
         }
@@ -82,17 +92,21 @@ class OptionOrderProductService
         $orderProductUntaxedPrice = $orderProduct->getPrice();
         $orderProductUntaxedPromoPrice = $orderProduct->getPromoPrice();
 
+        // Every amount below maps a DECIMAL column, whose generated setter takes ?string.
+        // Subtracting a float from what the getter returned yields a float, which the
+        // setter refuses outright: casting back is not cosmetic, it is what makes the
+        // call legal.
         if ($orderProductTax) {
-            $orderProductTaxAmount = $orderProductTax->getAmount();
-            $orderProductTaxAmountPromo = $orderProductTax->getPromoAmount();
+            $orderProductTaxAmount = (float) $orderProductTax->getAmount();
+            $orderProductTaxAmountPromo = (float) $orderProductTax->getPromoAmount();
             $orderProductTax
-                ->setAmount($orderProductTaxAmount - $totalCustomizationVAT)
-                ->setPromoAmount($orderProductTaxAmountPromo - $totalCustomizationVAT)
+                ->setAmount((string) ($orderProductTaxAmount - $totalCustomizationVAT))
+                ->setPromoAmount((string) ($orderProductTaxAmountPromo - $totalCustomizationVAT))
                 ->save();
         }
         $orderProduct
-            ->setPrice($orderProductUntaxedPrice - $totalCustomizationUntaxedPrice)
-            ->setPromoPrice($orderProductUntaxedPromoPrice - $totalCustomizationUntaxedPrice)
+            ->setPrice((string) ((float) $orderProductUntaxedPrice - $totalCustomizationUntaxedPrice))
+            ->setPromoPrice((string) ((float) $orderProductUntaxedPromoPrice - $totalCustomizationUntaxedPrice))
             ->save();
     }
 
@@ -100,13 +114,12 @@ class OptionOrderProductService
      * @throws PropelException
      */
     public function createCustomizationOrderProduct(
-        Order          $placedOrder,
-        OrderProduct   $orderProductMaster,
-        Product        $product,
+        Order $placedOrder,
+        OrderProduct $orderProductMaster,
+        Product $product,
         OptionCartItemOrderProduct $customization,
-       $forceUntaxed = 0
-    ): array
-    {
+        $forceUntaxed = 0,
+    ): array {
         $session = $this->request->getSession();
         $locale = $session instanceof \Thelia\Core\HttpFoundation\Session\Session
             ? $session->getLang()->getLocale()
@@ -136,8 +149,8 @@ class OptionOrderProductService
         $orderProduct = new OrderProduct();
         $orderProduct
             ->setOrderId($placedOrder->getId())
-            ->setProductRef("Personalisation")
-            ->setProductSaleElementsRef("CUSTOMIZATION")
+            ->setProductRef('Personalisation')
+            ->setProductSaleElementsRef('CUSTOMIZATION')
             ->setProductSaleElementsId(null)
             ->setTitle($title)
             ->setChapo(null)
@@ -146,8 +159,8 @@ class OptionOrderProductService
             ->setVirtual(1)
             ->setVirtualDocument(null)
             ->setQuantity($orderProductMasterQuantity)
-            ->setPrice($untaxedPrice)
-            ->setPromoPrice($untaxedPrice)
+            ->setPrice((string) $untaxedPrice)
+            ->setPromoPrice((string) $untaxedPrice)
             ->setWasNew(0)
             ->setWasInPromo(0)
             ->setWeight('0')
@@ -161,15 +174,15 @@ class OptionOrderProductService
             ->setOrderProductId($orderProduct->getId())
             ->setTitle($taxI18n->getTitle())
             ->setDescription($taxI18n->getDescription())
-            ->setAmount($VAT)
-            ->setPromoAmount($VAT)
+            ->setAmount((string) $VAT)
+            ->setPromoAmount((string) $VAT)
             ->save();
 
         $this->updateCustomizationData($orderProduct->getId(), $customization);
 
         return [
             $untaxedPrice,
-            $VAT
+            $VAT,
         ];
     }
 
@@ -180,6 +193,7 @@ class OptionOrderProductService
     {
         $customization = OptionCartItemOrderProductQuery::create()->filterById($customisation->getId())->findOne();
         $customization?->setOptionOrderProductId($customizationOrderProductId)->save();
+
         return null;
     }
 
@@ -193,20 +207,19 @@ class OptionOrderProductService
         if (null === $taxedPrice) {
             return null;
         }
-        
+
         return (new Calculator())
             ->loadTaxRuleWithoutProduct($taxRule, $address->getCountry())
             ->getUntaxedPrice($taxedPrice);
     }
 
     /**
-     * @param Product|null $product
      * @return array|mixed|TaxRule|null
      */
     public function getCustomizationTaxeRule(?Product $product = null): mixed
     {
         $taxRule = TaxRuleQuery::create()
-            ->filterById(ConfigQuery::read("tax_customization_default_id", 1))
+            ->filterById(ConfigQuery::read('tax_customization_default_id', 1))
             ->findOne();
 
         if ($taxRule) {
