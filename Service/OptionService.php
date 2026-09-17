@@ -2,41 +2,46 @@
 
 declare(strict_types=1);
 
+/*
+ * This file is part of the Thelia package.
+ * http://www.thelia.net
+ *
+ * (c) OpenStudio <info@thelia.net>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Option\Service;
 
-use Exception;
-use LogicException;
 use Option\Event\CheckOptionEvent;
 use Option\Model\ProductAvailableOptionQuery;
 use Option\Option as OptionModule;
-use Propel\Runtime\Exception\PropelException;
 use Symfony\Component\Form\Form;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Thelia\Core\Event\Product\ProductDeleteEvent;
 use Thelia\Core\Event\TheliaEvents;
 use Thelia\Core\Translation\Translator;
+use Thelia\Domain\Taxation\TaxEngine\TaxEngine;
 use Thelia\Model\Category;
 use Thelia\Model\CategoryQuery;
 use Thelia\Model\Product;
 use Thelia\Model\ProductPrice;
-use Thelia\Domain\Taxation\TaxEngine\TaxEngine;
 
 /**
- *
  * One option is identical to the Thelia product model.
- * There is a link table that identifies a product as an option
+ * There is a link table that identifies a product as an option.
  *
  * OptionProductCreateEvent extend ProductCreateEvent, it uses to identify an option creation.
- *
  */
 class OptionService
 {
     public function __construct(
         protected EventDispatcherInterface $dispatcher,
-        protected OptionProvider           $optionProvider,
-        protected TaxEngine $taxEngine
-    )
-    {}
+        protected OptionProvider $optionProvider,
+        protected TaxEngine $taxEngine,
+    ) {
+    }
 
     public function createOption(Form $form): void
     {
@@ -56,9 +61,7 @@ class OptionService
         $this->dispatcher->dispatch($changeEvent, TheliaEvents::PRODUCT_UPDATE);
 
         if (!$changeEvent->hasProduct()) {
-            throw new LogicException(
-                Translator::getInstance()->trans('No Option was updated.')
-            );
+            throw new \LogicException(Translator::getInstance()->trans('No Option was updated.', [], OptionModule::DOMAIN_NAME));
         }
     }
 
@@ -68,43 +71,56 @@ class OptionService
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     public function getOptionCategory($locale = 'en_US'): Category
     {
+        // The stored id outlives the row it points at: deleting the category from the
+        // catalogue leaves the config value behind, findPk() then answers null against
+        // a Category return type, and the TypeError takes down every hook of the module
+        // without a word on screen.
         if ($optionCategoryId = OptionModule::getConfigValue(OptionModule::OPTION_CATEGORY_ID)) {
-            return CategoryQuery::create()->findPk($optionCategoryId);
+            if (null !== $optionCategory = CategoryQuery::create()->findPk($optionCategoryId)) {
+                return $optionCategory;
+            }
         }
 
+        // The title is a technical sentinel, identical in every language: filtering on
+        // a locale here would only miss the row the module wrote under another one.
         $optionCategory = CategoryQuery::create()
             ->useCategoryI18nQuery()
                 ->filterByTitle(OptionModule::OPTION_CATEGORY_TITLE)
-                ->filterByLocale($locale)
             ->endUse()
         ->findOne();
 
-        return $optionCategory ?? $this->createOptionCategory(OptionModule::OPTION_CATEGORY_TITLE);
+        if (null !== $optionCategory) {
+            OptionModule::setConfigValue(OptionModule::OPTION_CATEGORY_ID, (string) $optionCategory->getId());
+
+            return $optionCategory;
+        }
+
+        return $this->createOptionCategory($locale);
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
-    public function createOptionCategory($title, $locale = 'en_US', $parent = 0): Category
+    public function createOptionCategory($locale = 'en_US', $parent = 0): Category
     {
         try {
             $optionCategory = (new Category())
                 ->setLocale($locale)
                 ->setParent($parent)
                 ->setVisible(0)
-                ->setTitle($title);
+                ->setTitle(OptionModule::OPTION_CATEGORY_TITLE);
 
             $optionCategory->save();
 
             OptionModule::setConfigValue(OptionModule::OPTION_CATEGORY_ID, (string) $optionCategory->getId());
-            return $optionCategory;
 
-        } catch (Exception $ex) {
-            throw new Exception(sprintf("Error during option category creation %s", $ex->getMessage()));
+            return $optionCategory;
+        } catch (\Exception $ex) {
+            throw new \Exception(\sprintf('Error during option category creation %s', $ex->getMessage()));
         }
     }
 
@@ -112,9 +128,7 @@ class OptionService
      * Retrieves and returns the list of products (which are options) attached to the product passed in parameter.
      * If the option id is specified, returns only the corresponding product in the product table.
      *
-     * @param Product $product
      * @param null $optionProduct
-     * @return array|null
      */
     public function getProductAvailableOptions(Product $product, $optionProduct = null): ?array
     {
@@ -125,9 +139,7 @@ class OptionService
             $productAvailableOptions->filterByOptionId($optionProduct->getId());
         }
 
-        $options = array_map(static function ($productAvailableOption) {
-            return $productAvailableOption->getOptionProduct();
-        }, iterator_to_array($productAvailableOptions->find()));
+        $options = array_map(static fn ($productAvailableOption) => $productAvailableOption->getOptionProduct(), iterator_to_array($productAvailableOptions->find()));
 
         $event = new CheckOptionEvent();
         $event
@@ -165,7 +177,6 @@ class OptionService
     {
         return $this->getOptionPrice($option, $isPromo);
     }
-
 
     public function getOptionUnTaxedPrice(Product $option, bool $isPromo = false): float|int
     {

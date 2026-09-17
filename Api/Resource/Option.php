@@ -30,6 +30,23 @@ use Thelia\Model\Map\ProductTableMap;
     denormalizationContext: ['groups' => [self::GROUP_ADMIN_WRITE]],
     provider: OptionProductProvider::class
 )]
+// The front operations are anonymous: a visitor picks the options of a product
+// before signing in. They expose only the options flagged visible in the
+// back-office, and `productId` or `pseId` narrows the collection to what a
+// given product accepts.
+#[ApiResource(
+    operations: [
+        new GetCollection(
+            uriTemplate: '/front/options'
+        ),
+        new Get(
+            uriTemplate: '/front/options/{id}',
+            normalizationContext: ['groups' => [self::GROUP_FRONT_READ, self::GROUP_FRONT_READ_SINGLE]]
+        )
+    ],
+    normalizationContext: ['groups' => [self::GROUP_FRONT_READ]],
+    provider: OptionProductProvider::class
+)]
 class Option extends AbstractTranslatableResource
 {
     public const GROUP_ADMIN_READ = 'admin:option:read';
@@ -39,10 +56,10 @@ class Option extends AbstractTranslatableResource
     public const GROUP_FRONT_READ = 'front:option:read';
     public const GROUP_FRONT_READ_SINGLE = 'front:option:read:single';
 
-    #[Groups([self::GROUP_ADMIN_READ])]
+    #[Groups([self::GROUP_ADMIN_READ, self::GROUP_FRONT_READ])]
     public string $id;
 
-    #[Groups([self::GROUP_ADMIN_READ, self::GROUP_ADMIN_WRITE])]
+    #[Groups([self::GROUP_ADMIN_READ, self::GROUP_ADMIN_WRITE, self::GROUP_FRONT_READ])]
     #[NotBlank(groups: [self::GROUP_ADMIN_WRITE])]
     public string $ref;
 
@@ -50,19 +67,29 @@ class Option extends AbstractTranslatableResource
     #[NotBlank(groups: [self::GROUP_ADMIN_WRITE])]
     public int $taxRuleId;
 
-    #[Groups([self::GROUP_ADMIN_READ, self::GROUP_ADMIN_WRITE])]
+    #[Groups([self::GROUP_ADMIN_READ, self::GROUP_ADMIN_WRITE, self::GROUP_FRONT_READ])]
     public I18nCollection $i18ns;
 
-    #[Groups([self::GROUP_ADMIN_READ, self::GROUP_ADMIN_WRITE])]
+    #[Groups([self::GROUP_ADMIN_READ, self::GROUP_ADMIN_WRITE, self::GROUP_FRONT_READ])]
     #[NotBlank(groups: [Product::GROUP_ADMIN_WRITE])]
     public float $price;
 
-    #[Groups([self::GROUP_ADMIN_READ, self::GROUP_ADMIN_WRITE])]
+    #[Groups([self::GROUP_ADMIN_READ, self::GROUP_ADMIN_WRITE, self::GROUP_FRONT_READ])]
     #[NotBlank(groups: [Product::GROUP_ADMIN_WRITE])]
     public float $promoPrice;
 
-    #[Groups([self::GROUP_ADMIN_READ, self::GROUP_ADMIN_WRITE])]
+    #[Groups([self::GROUP_ADMIN_READ, self::GROUP_ADMIN_WRITE, self::GROUP_FRONT_READ])]
     public bool $promo = false;
+
+    // product_price holds untaxed amounts. The front prices an option the way
+    // the shop bills it, so the taxed counterparts are computed for the front
+    // groups only — each one costs a tax resolution the back-office does not
+    // need.
+    #[Groups([self::GROUP_FRONT_READ])]
+    public ?float $taxedPrice = null;
+
+    #[Groups([self::GROUP_FRONT_READ])]
+    public ?float $taxedPromoPrice = null;
 
     #[Groups([self::GROUP_ADMIN_READ, self::GROUP_ADMIN_WRITE])]
     public ?float $weight;
@@ -150,6 +177,28 @@ class Option extends AbstractTranslatableResource
     public function setPromo(bool $promo): Option
     {
         $this->promo = $promo;
+        return $this;
+    }
+
+    public function getTaxedPrice(): ?float
+    {
+        return $this->taxedPrice;
+    }
+
+    public function setTaxedPrice(?float $taxedPrice): Option
+    {
+        $this->taxedPrice = $taxedPrice;
+        return $this;
+    }
+
+    public function getTaxedPromoPrice(): ?float
+    {
+        return $this->taxedPromoPrice;
+    }
+
+    public function setTaxedPromoPrice(?float $taxedPromoPrice): Option
+    {
+        $this->taxedPromoPrice = $taxedPromoPrice;
         return $this;
     }
 

@@ -1,80 +1,151 @@
 # Option
 
-This module allows you to manage the addition of paid options to your products.
+Sell paid options alongside a product: gift wrapping, engraving, an extended warranty.
+
+An option is a Thelia product of its own, so it has a price, a tax rule, a promotional
+status, an image and a description. What this module adds is the link between an option
+and the products that accept it, and the plumbing that carries the customer's choice from
+the product page to the invoice.
+
+This version requires Thelia 3.0.
 
 ## Installation
 
-### Composer
-
 ```
-composer require thelia/option-module:~1.0
+composer require thelia/option-module
 ```
 
-## Usage
+## Back office
 
-Options closely resemble a standard Thelia product, with a price to which you can add tax rules, promotional status, an 
-image, a description, etc.
+From the module menu you can create, edit and delete options.
 
-### BackOffice Configuration
+An option is then attached to a product, a category or a template. Attaching it to a
+category or a template covers every product underneath, which is usually how you want to
+manage a catalogue-wide option.
 
-From the module menu, you can: :
-* Create, modify, or delete an option
-* Assign an option to a product, category, or template
+An option can be flagged customizable. The customer then types a value when adding the
+product to their cart, instead of just ticking a box.
 
-Assigning an option to a category or template will affect all linked products, making it easy to manage options and their 
-assignment to relevant products.
+## Front office
 
-### Customization of Options
+The options of a product are hung onto the core add-to-cart form, so the theme submits
+them in the very request that creates the cart line. There is nothing to add to the theme:
+the fields arrive under `thelia_cart_add[options][<optionId>]`, a checkbox for a plain
+option and a text field for a customizable one.
 
-An option may require user input (e.g., customizing a knife with text). To achieve this, you can link an option to a 
-Symfony form. This form inherits from the class [BaseOptionFrontForm.php](Form%2FBase%2FBaseOptionFrontForm.php). The form describes all the fields necessary for
-adding the product to the shopping cart (in this case, the knife). The form's name should correspond to the option 
-reference (see: ```getName()```).
+An option the product does not accept has no field, so it cannot be submitted.
 
-``` php
-class OptionKnifeTextForm extends BaseOptionFrontForm
+What the customer picked is displayed through two theme hooks, which the module answers
+with the templates in `templates/theme_hook/`:
+
+| Hook | Where |
+|---|---|
+| `cart.item.bottom` | under each cart line |
+| `account-order.item.bottom` | under each line of a past order |
+
+### Pricing
+
+In the cart, the option amount is added to the price of the line it hangs under, because
+the cart total is computed from that column alone.
+
+Once the order is placed, each option becomes an order line of its own and its amount is
+taken off the host line. The two figures, untaxed and taxed, are settled when the customer
+picks the option and copied as they are, so the order charges what the cart displayed.
+
+## Extending an option with your own data
+
+A module can add data to an option as it is attached to the cart line. Listen to
+`customization_option_input_extend`:
+
+```php
+use Option\Event\OptionInputValidationEvent;
+use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
+
+final readonly class EngravingFontListener
 {
-    protected function buildForm(): void
+    #[AsEventListener(OptionInputValidationEvent::CUSTOMIZATION_OPTION_INPUT_EXTEND)]
+    public function addFont(OptionInputValidationEvent $event): void
     {
-        parent::buildForm();
-        [...]
-    }
+        if (self::ENGRAVING_OPTION_ID !== $event->getOptionId()) {
+            return;
+        }
 
-    public static function getName():string
-    {
-        return 'OPTION_REF';
+        $event->setOptionCustomizationFormData(
+            $event->getOptionCustomizationFormData() + ['font' => 'Copperplate'],
+        );
     }
 }
 ```
 
-Front-End Application
+The event carries the option id, the data the customer submitted and the cart line. What
+the listener leaves in it is stored with the option and travels to the order line.
 
-Two routes are available to manipulate options and products in the shopping cart.
+The event is dispatched for every option, customizable or not, so a listener can attach
+data to an option that asks the customer for nothing.
 
-See OpenApi doc : 
-```plaintext
-GET /open_api/doc
+## API
+
+The admin and front operations are documented with the rest of the API:
+
+```
+GET /api/docs
 ```
 
-List options for a product selling unit (pse):
+List the options a product accepts, from the product or from one of its sale elements.
+Only options flagged visible are returned, with both untaxed and taxed prices:
 
-```plaintext
-GET /open_api/option/get/{pseId}
+```
+GET /api/front/options?productId={productId}
+GET /api/front/options?pseId={pseId}
+GET /api/front/options/{optionId}
 ```
 
-Add one or more options to a cart item :
+The admin operations are guarded by the `admin.module` permission, the same one the module
+back-office screens check:
 
-```plaintext
-POST /open_api/option/add/{cartItemId}
+```
+GET /api/admin/options
+GET /api/admin/options/{optionId}
 ```
 
+The options carried by a cart line are read on the core cart payloads, under the
+`CartItemOptions` key of each cart item:
 
-## Hook
+```
+GET /api/front/cart
+GET /api/front/cart_items/{id}
+```
 
-In addition to the hook to attach the menu dedicated to option management in the main backOffice menu, a hook is used to
-link an order product with the information provided by the option. To customize the display of this information on an 
-invoice, you will need to override the order_product_additional_data.html template [order_product_additional_data.html](templates%2FbackOffice%2Fdefault%2Forder-product%2Forder_product_additional_data.html).
+```json
+{
+  "id": 19,
+  "quantity": 1,
+  "CartItemOptions": {
+    "options": [
+      {
+        "optionId": 1,
+        "ref": "OPTION_REF",
+        "title": "Gift wrap",
+        "price": 96.0,
+        "taxedPrice": 115.2,
+        "quantity": 1.0,
+        "customization": {"message": "Happy birthday"}
+      }
+    ]
+  }
+}
+```
 
+`CartItemOptions` is read-only. Options are written by submitting the add-to-cart form,
+which validates each option against the product and prices the line accordingly; a payload
+carrying `CartItemOptions` is rejected with a 400.
 
-## Loop
-Use [generic](https://doc.thelia.net/docs/loops/Generic) loop !
+The lines an option became are removed from every front read of an order, so a theme
+listing an order shows the products the customer chose and nothing else. Admin reads keep
+every line.
+
+## Overriding the back-office display
+
+Customization data is printed under each order product line in the back office. To change
+how it looks, override
+`templates/backOffice/default-twig/Option/order-product/order_product_additional_data.html.twig`.

@@ -63,7 +63,7 @@ class OptionProductTableMap extends TableMap
     /**
      * The total number of columns
      */
-    public const NUM_COLUMNS = 2;
+    public const NUM_COLUMNS = 3;
 
     /**
      * The number of lazy-loaded columns
@@ -73,7 +73,7 @@ class OptionProductTableMap extends TableMap
     /**
      * The number of columns to hydrate (NUM_COLUMNS - NUM_LAZY_LOAD_COLUMNS)
      */
-    public const NUM_HYDRATE_COLUMNS = 2;
+    public const NUM_HYDRATE_COLUMNS = 3;
 
     /**
      * the column name for the id field
@@ -84,6 +84,11 @@ class OptionProductTableMap extends TableMap
      * the column name for the product_id field
      */
     public const COL_PRODUCT_ID = 'option_product.product_id';
+
+    /**
+     * the column name for the is_customizable field
+     */
+    public const COL_IS_CUSTOMIZABLE = 'option_product.is_customizable';
 
     /**
      * The default string format for model objects of the related table
@@ -99,11 +104,11 @@ class OptionProductTableMap extends TableMap
      * @var array<string, mixed>
      */
     protected static $fieldNames = [
-        self::TYPE_PHPNAME       => ['Id', 'ProductId', ],
-        self::TYPE_CAMELNAME     => ['id', 'productId', ],
-        self::TYPE_COLNAME       => [OptionProductTableMap::COL_ID, OptionProductTableMap::COL_PRODUCT_ID, ],
-        self::TYPE_FIELDNAME     => ['id', 'product_id', ],
-        self::TYPE_NUM           => [0, 1, ]
+        self::TYPE_PHPNAME       => ['Id', 'ProductId', 'IsCustomizable', ],
+        self::TYPE_CAMELNAME     => ['id', 'productId', 'isCustomizable', ],
+        self::TYPE_COLNAME       => [OptionProductTableMap::COL_ID, OptionProductTableMap::COL_PRODUCT_ID, OptionProductTableMap::COL_IS_CUSTOMIZABLE, ],
+        self::TYPE_FIELDNAME     => ['id', 'product_id', 'is_customizable', ],
+        self::TYPE_NUM           => [0, 1, 2, ]
     ];
 
     /**
@@ -115,11 +120,11 @@ class OptionProductTableMap extends TableMap
      * @var array<string, mixed>
      */
     protected static $fieldKeys = [
-        self::TYPE_PHPNAME       => ['Id' => 0, 'ProductId' => 1, ],
-        self::TYPE_CAMELNAME     => ['id' => 0, 'productId' => 1, ],
-        self::TYPE_COLNAME       => [OptionProductTableMap::COL_ID => 0, OptionProductTableMap::COL_PRODUCT_ID => 1, ],
-        self::TYPE_FIELDNAME     => ['id' => 0, 'product_id' => 1, ],
-        self::TYPE_NUM           => [0, 1, ]
+        self::TYPE_PHPNAME       => ['Id' => 0, 'ProductId' => 1, 'IsCustomizable' => 2, ],
+        self::TYPE_CAMELNAME     => ['id' => 0, 'productId' => 1, 'isCustomizable' => 2, ],
+        self::TYPE_COLNAME       => [OptionProductTableMap::COL_ID => 0, OptionProductTableMap::COL_PRODUCT_ID => 1, OptionProductTableMap::COL_IS_CUSTOMIZABLE => 2, ],
+        self::TYPE_FIELDNAME     => ['id' => 0, 'product_id' => 1, 'is_customizable' => 2, ],
+        self::TYPE_NUM           => [0, 1, 2, ]
     ];
 
     /**
@@ -143,6 +148,14 @@ class OptionProductTableMap extends TableMap
         'COL_PRODUCT_ID' => 'PRODUCT_ID',
         'product_id' => 'PRODUCT_ID',
         'option_product.product_id' => 'PRODUCT_ID',
+        'IsCustomizable' => 'IS_CUSTOMIZABLE',
+        'OptionProduct.IsCustomizable' => 'IS_CUSTOMIZABLE',
+        'isCustomizable' => 'IS_CUSTOMIZABLE',
+        'optionProduct.isCustomizable' => 'IS_CUSTOMIZABLE',
+        'OptionProductTableMap::COL_IS_CUSTOMIZABLE' => 'IS_CUSTOMIZABLE',
+        'COL_IS_CUSTOMIZABLE' => 'IS_CUSTOMIZABLE',
+        'is_customizable' => 'IS_CUSTOMIZABLE',
+        'option_product.is_customizable' => 'IS_CUSTOMIZABLE',
     ];
 
     /**
@@ -164,6 +177,7 @@ class OptionProductTableMap extends TableMap
         // columns
         $this->addPrimaryKey('id', 'Id', 'INTEGER', true, null, null);
         $this->addForeignKey('product_id', 'ProductId', 'INTEGER', 'product', 'id', true, null, null);
+        $this->addColumn('is_customizable', 'IsCustomizable', 'BOOLEAN', true, 1, false);
     }
 
     /**
@@ -359,9 +373,11 @@ class OptionProductTableMap extends TableMap
         if (null === $alias) {
             $criteria->addSelectColumn(OptionProductTableMap::COL_ID);
             $criteria->addSelectColumn(OptionProductTableMap::COL_PRODUCT_ID);
+            $criteria->addSelectColumn(OptionProductTableMap::COL_IS_CUSTOMIZABLE);
         } else {
             $criteria->addSelectColumn($alias . '.id');
             $criteria->addSelectColumn($alias . '.product_id');
+            $criteria->addSelectColumn($alias . '.is_customizable');
         }
     }
 
@@ -382,9 +398,11 @@ class OptionProductTableMap extends TableMap
         if (null === $alias) {
             $criteria->removeSelectColumn(OptionProductTableMap::COL_ID);
             $criteria->removeSelectColumn(OptionProductTableMap::COL_PRODUCT_ID);
+            $criteria->removeSelectColumn(OptionProductTableMap::COL_IS_CUSTOMIZABLE);
         } else {
             $criteria->removeSelectColumn($alias . '.id');
             $criteria->removeSelectColumn($alias . '.product_id');
+            $criteria->removeSelectColumn($alias . '.is_customizable');
         }
     }
 

@@ -36,17 +36,16 @@ class DuplicateCartItemListener implements EventSubscriberInterface
             return;
         }
 
-        $optionsProduct = [];
-
         /** @var  OptionCartItemOrderProduct[] $options */
         foreach ($options as $option) {
             $option
                 ->setCartItemOptionId($event->getNewItem()->getId())
                 ->save();
-
-            $optionsProduct[] = $option->getProductAvailableOption()->getOptionProduct();
         }
-        $this->optionCartItemService->handleCartItemOptionPrice($event->getNewItem(), $optionsProduct);
+
+        // Thelia\Model\Cart::duplicate() creates the new line at the catalog price, so
+        // the options are missing from it until they are added back here.
+        $this->optionCartItemService->reconcileCartItemPrice($event->getNewItem());
     }
 
     public static function getSubscribedEvents(): array

@@ -90,6 +90,14 @@ abstract class OptionProduct implements ActiveRecordInterface
     protected ?int $product_id = null;
 
     /**
+     * The value for the is_customizable field.
+     *
+     * Note: this column has a database default value of: false
+     * @var        boolean
+     */
+    protected ?bool $is_customizable = null;
+
+    /**
      * @var        Product
      */
     protected $aProduct;
@@ -145,10 +153,23 @@ abstract class OptionProduct implements ActiveRecordInterface
     protected $templateAvailableOptionsScheduledForDeletion = null;
 
     /**
+     * Applies default values to this object.
+     * This method should be called from the object's constructor (or
+     * equivalent initialization method).
+     * @see __construct()
+     */
+    public function applyDefaultValues(): void
+    {
+        $this->is_customizable = false;
+    }
+
+    /**
      * Initializes internal state of Option\Model\Base\OptionProduct object.
+     * @see applyDefaults()
      */
     public function __construct()
     {
+        $this->applyDefaultValues();
     }
 
     /**
@@ -390,6 +411,26 @@ abstract class OptionProduct implements ActiveRecordInterface
     }
 
     /**
+     * Get the [is_customizable] column value.
+     *
+     * @return boolean
+     */
+    public function getIsCustomizable(): ?bool
+    {
+        return $this->is_customizable;
+    }
+
+    /**
+     * Get the [is_customizable] column value.
+     *
+     * @return boolean
+     */
+    public function isCustomizable(): ?bool
+    {
+        return $this->getIsCustomizable();
+    }
+
+    /**
      * Set the value of [id] column.
      *
      * @param int $v New value
@@ -434,6 +475,34 @@ abstract class OptionProduct implements ActiveRecordInterface
     }
 
     /**
+     * Sets the value of the [is_customizable] column.
+     * Non-boolean arguments are converted using the following rules:
+     *   * 1, '1', 'true',  'on',  and 'yes' are converted to boolean true
+     *   * 0, '0', 'false', 'off', and 'no'  are converted to boolean false
+     * Check on string values is case insensitive (so 'FaLsE' is seen as 'false').
+     *
+     * @param bool|integer|string $v The new value
+     * @return $this The current object (for fluent API support)
+     */
+    public function setIsCustomizable($v): static
+    {
+        if ($v !== null) {
+            if (\is_string($v)) {
+                $v = \in_array(strtolower($v), array('false', 'off', '-', 'no', 'n', '0', '')) ? false : true;
+            } else {
+                $v = (boolean) $v;
+            }
+        }
+
+        if ($this->is_customizable !== $v) {
+            $this->is_customizable = $v;
+            $this->modifiedColumns[OptionProductTableMap::COL_IS_CUSTOMIZABLE] = true;
+        }
+
+        return $this;
+    }
+
+    /**
      * Indicates whether the columns in this object are only set to default values.
      *
      * This method can be used in conjunction with isModified() to indicate whether an object is both
@@ -443,6 +512,10 @@ abstract class OptionProduct implements ActiveRecordInterface
      */
     public function hasOnlyDefaultValues(): bool
     {
+            if ($this->is_customizable !== false) {
+                return false;
+            }
+
         // otherwise, everything was equal, so return TRUE
         return true;
     }
@@ -475,6 +548,9 @@ abstract class OptionProduct implements ActiveRecordInterface
             $col = $row[TableMap::TYPE_NUM == $indexType ? 1 + $startcol : OptionProductTableMap::translateFieldName('ProductId', TableMap::TYPE_PHPNAME, $indexType)];
             $this->product_id = (null !== $col) ? (int) $col : null;
 
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : OptionProductTableMap::translateFieldName('IsCustomizable', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->is_customizable = (null !== $col) ? (boolean) $col : null;
+
             $this->resetModified();
             $this->setNew(false);
 
@@ -482,7 +558,7 @@ abstract class OptionProduct implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 2; // 2 = OptionProductTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 3; // 3 = OptionProductTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException(sprintf('Error populating %s object', '\\Option\\Model\\OptionProduct'), 0, $e);
@@ -763,6 +839,9 @@ abstract class OptionProduct implements ActiveRecordInterface
         if ($this->isColumnModified(OptionProductTableMap::COL_PRODUCT_ID)) {
             $modifiedColumns[':p' . $index++]  = '`product_id`';
         }
+        if ($this->isColumnModified(OptionProductTableMap::COL_IS_CUSTOMIZABLE)) {
+            $modifiedColumns[':p' . $index++]  = '`is_customizable`';
+        }
 
         $sql = sprintf(
             'INSERT INTO `option_product` (%s) VALUES (%s)',
@@ -780,6 +859,10 @@ abstract class OptionProduct implements ActiveRecordInterface
                         break;
                     case '`product_id`':
                         $stmt->bindValue($identifier, $this->product_id, PDO::PARAM_INT);
+
+                        break;
+                    case '`is_customizable`':
+                        $stmt->bindValue($identifier, (int) $this->is_customizable, PDO::PARAM_INT);
 
                         break;
                 }
@@ -850,6 +933,9 @@ abstract class OptionProduct implements ActiveRecordInterface
             case 1:
                 return $this->getProductId();
 
+            case 2:
+                return $this->getIsCustomizable();
+
             default:
                 return null;
         } // switch()
@@ -880,6 +966,7 @@ abstract class OptionProduct implements ActiveRecordInterface
         $result = [
             $keys[0] => $this->getId(),
             $keys[1] => $this->getProductId(),
+            $keys[2] => $this->getIsCustomizable(),
         ];
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
@@ -989,6 +1076,9 @@ abstract class OptionProduct implements ActiveRecordInterface
             case 1:
                 $this->setProductId($value);
                 break;
+            case 2:
+                $this->setIsCustomizable($value);
+                break;
         } // switch()
 
         return $this;
@@ -1020,6 +1110,9 @@ abstract class OptionProduct implements ActiveRecordInterface
         }
         if (array_key_exists($keys[1], $arr)) {
             $this->setProductId($arr[$keys[1]]);
+        }
+        if (array_key_exists($keys[2], $arr)) {
+            $this->setIsCustomizable($arr[$keys[2]]);
         }
 
         return $this;
@@ -1069,6 +1162,9 @@ abstract class OptionProduct implements ActiveRecordInterface
         }
         if ($this->isColumnModified(OptionProductTableMap::COL_PRODUCT_ID)) {
             $criteria->add(OptionProductTableMap::COL_PRODUCT_ID, $this->product_id);
+        }
+        if ($this->isColumnModified(OptionProductTableMap::COL_IS_CUSTOMIZABLE)) {
+            $criteria->add(OptionProductTableMap::COL_IS_CUSTOMIZABLE, $this->is_customizable);
         }
 
         return $criteria;
@@ -1159,6 +1255,7 @@ abstract class OptionProduct implements ActiveRecordInterface
     public function copyInto(object $copyObj, bool $deepCopy = false, bool $makeNew = true): void
     {
         $copyObj->setProductId($this->getProductId());
+        $copyObj->setIsCustomizable($this->getIsCustomizable());
 
         if ($deepCopy) {
             // important: temporarily setNew(false) because this affects the behavior of
@@ -2098,8 +2195,10 @@ abstract class OptionProduct implements ActiveRecordInterface
         }
         $this->id = null;
         $this->product_id = null;
+        $this->is_customizable = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
+        $this->applyDefaultValues();
         $this->resetModified();
         $this->setNew(true);
         $this->setDeleted(false);
