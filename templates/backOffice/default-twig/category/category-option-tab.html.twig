@@ -54,8 +54,6 @@
                                   class="d-inline" onsubmit="return confirm('{{ 'Remove this option from the category products?'|trans({}, d) }}')">
                                 <input type="hidden" name="option_product_id" value="{{ option.optionProductId }}">
                                 <input type="hidden" name="category_id" value="{{ category_id }}">
-                                <input type="hidden" name="{{ field_name(form.success_url) }}" value="{{ redirect_url }}">
-                                <input type="hidden" name="{{ field_name(form.error_url) }}" value="{{ redirect_url }}">
                                 <input type="hidden" name="delete_all" value="0">
                                 <button type="submit" class="btn btn-danger btn-sm" title="{{ 'Delete this option'|trans({}, d) }}">
                                     <i class="bi bi-trash"></i>
