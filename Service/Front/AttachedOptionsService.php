@@ -16,13 +16,12 @@ namespace Option\Service\Front;
 
 use Option\Model\OptionCartItemOrderProduct;
 use Option\Model\OptionCartItemOrderProductQuery;
+use Option\Service\OptionLineResolver;
 use Thelia\Model\CartItemQuery;
 use Thelia\Model\OrderProductQuery;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Thelia\Core\HttpFoundation\Session\Session;
 use Thelia\Model\Lang;
-use Thelia\Model\Product;
-use Thelia\Model\ProductQuery;
 
 /**
  * What option_cart_item_order_product holds about a line the front is about to show.
@@ -54,6 +53,7 @@ final readonly class AttachedOptionsService
 {
     public function __construct(
         private RequestStack $requestStack,
+        private OptionLineResolver $optionLineResolver,
     ) {
     }
 
@@ -133,34 +133,19 @@ final readonly class AttachedOptionsService
      */
     private function row(OptionCartItemOrderProduct $optionLine, string $locale, bool $taxed, int $quantity): ?array
     {
-        // The row keeps its foreign key nullable and ON DELETE SET NULL: an option the
-        // merchant removed from the catalogue leaves a line behind with nothing to name
-        // it, and a nameless line under a product helps nobody.
-        $productAvailableOption = $optionLine->getProductAvailableOption();
+        // A nameless line under a product helps nobody: an option the merchant removed
+        // from the catalogue leaves a row behind with nothing left to name it.
+        $resolved = $this->optionLineResolver->resolve($optionLine);
 
-        if (null === $productAvailableOption) {
+        if (null === $resolved) {
             return null;
         }
 
-        $optionProduct = $productAvailableOption->getOptionProduct();
-
-        if (null === $optionProduct) {
-            return null;
-        }
-
-        // Read through the query rather than OptionProduct::getProduct(): the generated
-        // getter is typed non-nullable while it resolves a foreign key, so a row pointing
-        // at a deleted product would slip past a guard the analyser folds away.
-        $product = ProductQuery::create()->findPk($optionProduct->getProductId());
-
-        if (!$product instanceof Product) {
-            return null;
-        }
-
+        $product = $resolved->product;
         $product->setLocale($locale);
 
         return [
-            'id' => (int) $optionProduct->getId(),
+            'id' => (int) $resolved->optionProduct->getId(),
             'title' => (string) ($product->getTitle() ?: $product->getRef()),
             'value' => $this->customizationValue($optionLine),
             // A DECIMAL column comes back as a string. Multiplied here rather than in the
