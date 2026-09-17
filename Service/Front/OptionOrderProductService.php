@@ -16,15 +16,17 @@ namespace Option\Service\Front;
 
 use Option\Model\OptionCartItemOrderProduct;
 use Option\Model\OptionCartItemOrderProductQuery;
+use Option\Service\OptionLineResolver;
+use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\Exception\PropelException;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Thelia\Core\HttpFoundation\Session\Session;
 use Thelia\Core\Translation\Translator;
-use Thelia\Domain\Taxation\TaxEngine\Calculator;
 use Thelia\Model\ConfigQuery;
+use Thelia\Model\Lang;
 use Thelia\Model\Order;
-use Thelia\Model\OrderAddressQuery;
 use Thelia\Model\OrderProduct;
 use Thelia\Model\OrderProductTax;
 use Thelia\Model\Product;
@@ -37,10 +39,16 @@ class OptionOrderProductService
 {
     protected Translator $translator;
     protected EventDispatcherInterface $disptacher;
-    protected Request $request;
+    // Null outside an HTTP request: an order placed from the command line has no request
+    // to read, and a non-nullable property would fail when the service is built.
+    protected ?Request $request;
 
-    public function __construct(RequestStack $requestStack, EventDispatcherInterface $dispatcher, Translator $translator)
-    {
+    public function __construct(
+        RequestStack $requestStack,
+        EventDispatcherInterface $dispatcher,
+        Translator $translator,
+        protected OptionLineResolver $optionLineResolver,
+    ) {
         $this->translator = $translator;
         $this->disptacher = $dispatcher;
         $this->request = $requestStack->getCurrentRequest();
@@ -72,18 +80,31 @@ class OptionOrderProductService
 
         $customizations = OptionCartItemOrderProductQuery::create()
             ->filterByOrderProductId($orderProduct->getId())
+            // An option that already became an order line is already invoiced. The
+            // subtraction at the end of this method is absolute, not replayable: billing
+            // the same option twice would take its amount off the host line twice.
+            ->filterByOptionOrderProductId(null, Criteria::ISNULL)
             ->find();
 
         $customizations = $customizations->getData();
 
         foreach ($customizations as $customization) {
-            [$customizationUntaxedPrice, $customizationVAT] = $this->createCustomizationOrderProduct(
+            $amounts = $this->createCustomizationOrderProduct(
                 $placedOrder,
                 $orderProduct,
                 $product,
                 $customization,
                 $forceUntaxed
             );
+
+            // The option can no longer be named or priced. Its line is dropped, and
+            // nothing is taken off the host line for it — the customer is charged the
+            // product, which is the only figure still standing.
+            if (null === $amounts) {
+                continue;
+            }
+
+            [$customizationUntaxedPrice, $customizationVAT] = $amounts;
 
             $totalCustomizationUntaxedPrice += $customizationUntaxedPrice;
             $totalCustomizationVAT += $customizationVAT;
@@ -111,6 +132,11 @@ class OptionOrderProductService
     }
 
     /**
+     * The untaxed amount and the VAT the option line carries, or null when the option
+     * can no longer be named or priced and its line has to be dropped.
+     *
+     * @return array{0: float|int, 1: float|int}|null
+     *
      * @throws PropelException
      */
     public function createCustomizationOrderProduct(
@@ -119,30 +145,42 @@ class OptionOrderProductService
         Product $product,
         OptionCartItemOrderProduct $customization,
         $forceUntaxed = 0,
-    ): array {
-        $session = $this->request->getSession();
-        $locale = $session instanceof \Thelia\Core\HttpFoundation\Session\Session
-            ? $session->getLang()->getLocale()
-            : \Thelia\Model\Lang::getDefaultLanguage()->getLocale();
+    ): ?array {
+        $resolved = $this->optionLineResolver->resolve($customization);
+
+        if (null === $resolved) {
+            return null;
+        }
+
+        $locale = $this->currentLocale();
         $product->setLocale($locale);
 
-        $title = $customization->getProductAvailableOption()->getOptionProduct()->getProduct()->setLocale('fr_FR')->getTitle();
+        $title = $resolved->product->setLocale('fr_FR')->getTitle();
 
-        $taxRule = $this->getCustomizationTaxeRule($product);
-        $taxedPrice = $customization->getTaxedPrice();
-        $untaxedPrice = $this->getCustomizationUntaxedPrice($placedOrder, $taxRule, $customization->getTaxedPrice());
-
-        $VAT = $taxedPrice - $untaxedPrice;
-        if ($VAT < 0) {
-            $VAT = 0;
-        }
+        // Copied, never recomputed. Both figures were settled when the visitor picked the
+        // option, with the tax rule of the product it hangs under and the delivery country
+        // of that moment — and that is the basis the cart total, and therefore the host
+        // order line, were built on. Working them out again here from the shop-wide
+        // customisation rule would take an amount off the host line that was never added
+        // to it, and the shop would collect something other than what it displayed.
+        $untaxedPrice = (float) $customization->getPrice();
+        $taxedPrice = (float) $customization->getTaxedPrice();
+        $VAT = max(0.0, $taxedPrice - $untaxedPrice);
 
         if ($forceUntaxed) {
-            $VAT = 0;
-            $untaxedPrice = $taxedPrice;
+            // The host line carries no tax, so neither does its option. The untaxed amount
+            // stands as it is: swapping in the taxed one would take a tax-inclusive figure
+            // off a tax-exclusive line.
+            $VAT = 0.0;
         }
 
-        $taxI18n = I18n::forceI18nRetrieving($locale, 'TaxRule', $taxRule->getId());
+        // Nothing above depends on it any more — the rule is read for the label alone, and
+        // a shop whose customisation rule points nowhere gets an unlabelled line, not a
+        // failed order.
+        $taxRule = $this->getCustomizationTaxeRule($product);
+        $taxI18n = null !== $taxRule
+            ? I18n::forceI18nRetrieving($locale, 'TaxRule', $taxRule->getId())
+            : null;
 
         $orderProductMasterQuantity = $orderProductMaster->getQuantity();
 
@@ -164,7 +202,7 @@ class OptionOrderProductService
             ->setWasNew(0)
             ->setWasInPromo(0)
             ->setWeight('0')
-            ->setTaxRuleTitle($taxI18n->getTitle())
+            ->setTaxRuleTitle($taxI18n?->getTitle())
             ->setTaxRuleDescription('')
             ->setEanCode(null)
             ->setCartItemId(null)
@@ -172,8 +210,8 @@ class OptionOrderProductService
 
         (new OrderProductTax())
             ->setOrderProductId($orderProduct->getId())
-            ->setTitle($taxI18n->getTitle())
-            ->setDescription($taxI18n->getDescription())
+            ->setTitle($taxI18n?->getTitle() ?? '')
+            ->setDescription($taxI18n?->getDescription())
             ->setAmount((string) $VAT)
             ->setPromoAmount((string) $VAT)
             ->save();
@@ -198,25 +236,20 @@ class OptionOrderProductService
     }
 
     /**
-     * @throws PropelException
+     * Request::getSession() throws when nothing set a session, which an order placed
+     * outside HTTP never does — so the session is asked for only once it is known to be
+     * there, and the shop's default language answers otherwise.
      */
-    public function getCustomizationUntaxedPrice(Order $placedOrder, TaxRule $taxRule, $taxedPrice): float|int|null
+    private function currentLocale(): string
     {
-        $address = OrderAddressQuery::create()->findPk($placedOrder->getDeliveryOrderAddressId());
+        $session = $this->request?->hasSession() ? $this->request->getSession() : null;
 
-        if (null === $taxedPrice) {
-            return null;
-        }
-
-        return (new Calculator())
-            ->loadTaxRuleWithoutProduct($taxRule, $address->getCountry())
-            ->getUntaxedPrice($taxedPrice);
+        return $session instanceof Session
+            ? $session->getLang()->getLocale()
+            : Lang::getDefaultLanguage()->getLocale();
     }
 
-    /**
-     * @return array|mixed|TaxRule|null
-     */
-    public function getCustomizationTaxeRule(?Product $product = null): mixed
+    public function getCustomizationTaxeRule(?Product $product = null): ?TaxRule
     {
         $taxRule = TaxRuleQuery::create()
             ->filterById(ConfigQuery::read('tax_customization_default_id', 1))
