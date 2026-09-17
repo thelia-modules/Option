@@ -2,10 +2,9 @@
    theme's add-to-cart form.
 
    No stylesheet: the geometry is Tailwind utilities and the typography is the theme's own
-   tokens (h4, paragraph-4, text-grey). Every class used here is one the theme already
-   emits — a module template is not scanned by the theme's Tailwind, which declares
-   `@import "tailwindcss" source(none)` with @source limited to its own directories
-   (assets/styles/app.css). A class the theme never uses would simply not exist. #}
+   tokens (h4, paragraph-4, text-grey). The theme declares `@import "tailwindcss" source(none)`,
+   so this directory only gets scanned because app.css lists it under @source: a theme that
+   drops that line emits none of the classes below. #}
 {% block option_group_widget %}
     <fieldset class="mt-6 flex flex-col gap-3">
         {% if group_label %}
