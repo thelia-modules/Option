@@ -14,13 +14,10 @@ declare(strict_types=1);
 
 namespace Option\Api\State;
 
-use ApiPlatform\Metadata\Operation;
-use ApiPlatform\State\ProviderInterface;
 use Option\Model\OptionCartItemOrderProductQuery;
 use Propel\Runtime\ActiveQuery\Criteria;
-use Symfony\Component\DependencyInjection\Attribute\AsDecorator;
-use Symfony\Component\DependencyInjection\Attribute\AutowireDecorated;
-use Thelia\Api\Bridge\Propel\State\PropelItemProvider;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Thelia\Api\Bridge\Propel\Event\ModelToResourceEvent;
 use Thelia\Api\Resource\Order;
 
 /**
@@ -35,28 +32,36 @@ use Thelia\Api\Resource\Order;
  * this module exists: it renders whatever the API hands it, and what the module has to
  * say about a line arrives through the account-order.item.bottom hook instead.
  *
+ * Hooked on the transform rather than on a provider. A provider decorator only covers the
+ * one provider it names, and the order resource has more than one way in: guest order
+ * tracking (GET /front/guest-orders/{token}) serves the front groups from
+ * GuestOrderProvider, which calls modelToResource() straight and would sail past a
+ * decorator. Every provider, present and future, goes through this event.
+ *
  * Deliberately front-only: the back-office and the accounting need the lines exactly as
  * they were written.
  */
-#[AsDecorator(PropelItemProvider::class)]
-final readonly class OrderOptionLinesFilter implements ProviderInterface
+final readonly class OrderOptionLinesFilter implements EventSubscriberInterface
 {
-    public function __construct(
-        #[AutowireDecorated]
-        private ProviderInterface $inner,
-    ) {
+    public static function getSubscribedEvents(): array
+    {
+        return [
+            ModelToResourceEvent::AFTER_TRANSFORM => [
+                ['removeOptionLines', -10],
+            ],
+        ];
     }
 
-    public function provide(Operation $operation, array $uriVariables = [], array $context = []): object|array|null
+    public function removeOptionLines(ModelToResourceEvent $event): void
     {
-        $resource = $this->inner->provide($operation, $uriVariables, $context);
+        $resource = $event->getResource();
 
         if (!$resource instanceof Order || [] === $resource->getOrderProducts()) {
-            return $resource;
+            return;
         }
 
-        if (!$this->isFrontRead($operation, $context)) {
-            return $resource;
+        if (!$this->isFrontRead($event->getContext())) {
+            return;
         }
 
         $lineIds = [];
@@ -70,7 +75,7 @@ final readonly class OrderOptionLinesFilter implements ProviderInterface
         }
 
         if ([] === $lineIds) {
-            return $resource;
+            return;
         }
 
         // One query for the whole order: the lines an option became are exactly those an
@@ -84,40 +89,44 @@ final readonly class OrderOptionLinesFilter implements ProviderInterface
         $optionLineIds = array_map(intval(...), $optionLineIds);
 
         if ([] === $optionLineIds) {
-            return $resource;
+            return;
         }
 
         $resource->setOrderProducts(array_values(array_filter(
             $resource->getOrderProducts(),
             fn ($orderProduct): bool => !\in_array($this->lineId($orderProduct), $optionLineIds, true)
         )));
-
-        return $resource;
     }
 
     /**
-     * The back-office reads the same resource and must keep every line, so the filter
-     * only applies where the front groups are asked for.
+     * A front read is one no admin group takes part in — the same rule the core listeners
+     * on this event apply, so an admin read embedding an order keeps every line.
      *
      * @param array<string, mixed> $context
      */
-    private function isFrontRead(Operation $operation, array $context): bool
+    private function isFrontRead(array $context): bool
     {
-        $groups = $context['groups']
-            ?? $operation->getNormalizationContext()['groups']
-            ?? [];
+        $groups = $context['groups'] ?? [];
 
         if (!\is_array($groups)) {
             $groups = [$groups];
         }
 
+        $isFrontRead = false;
+
         foreach ($groups as $group) {
-            if (\is_string($group) && str_starts_with($group, 'front:')) {
-                return true;
+            if (!\is_string($group)) {
+                continue;
             }
+
+            if (str_starts_with($group, 'admin:')) {
+                return false;
+            }
+
+            $isFrontRead = $isFrontRead || str_starts_with($group, 'front:');
         }
 
-        return false;
+        return $isFrontRead;
     }
 
     private function lineId(mixed $orderProduct): ?int
