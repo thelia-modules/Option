@@ -14,8 +14,10 @@ declare(strict_types=1);
 
 namespace Option\Hook\Theme;
 
+use Option\Option;
 use Option\Service\Front\AttachedOptionsService;
 use Thelia\Core\Hook\Theme\ThemeHookInterface;
+use Thelia\Core\Translation\Translator;
 use Twig\Environment;
 
 /**
@@ -55,6 +57,9 @@ final readonly class CartItemOptionsHook implements ThemeHookInterface
 
         return $this->twig->render('@OptionModule/theme_hook/cart_item_options.html.twig', [
             'options' => $options,
+            'i18ns' => [
+                'included_options' => Translator::getInstance()->trans('Included options:', [], Option::DOMAIN_NAME),
+            ],
         ]);
     }
 

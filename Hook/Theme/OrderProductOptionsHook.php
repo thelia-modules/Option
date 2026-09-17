@@ -14,8 +14,10 @@ declare(strict_types=1);
 
 namespace Option\Hook\Theme;
 
+use Option\Option;
 use Option\Service\Front\AttachedOptionsService;
 use Thelia\Core\Hook\Theme\ThemeHookInterface;
+use Thelia\Core\Translation\Translator;
 use Twig\Environment;
 
 /**
@@ -69,6 +71,9 @@ final readonly class OrderProductOptionsHook implements ThemeHookInterface
 
         return $this->twig->render('@OptionModule/theme_hook/order_product_options.html.twig', [
             'options' => $options,
+            'i18ns' => [
+                'options_ordered' => Translator::getInstance()->trans('Options ordered with this product:', [], Option::DOMAIN_NAME),
+            ],
         ]);
     }
 
