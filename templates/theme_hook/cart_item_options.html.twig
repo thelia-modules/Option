@@ -1,17 +1,5 @@
-{# Paid options of a cart line, rendered at the theme_hook('cart.item.bottom') point.
-
-   A breakdown, not a surcharge: OptionCartItemService adds every option to cart_item.price
-   before this is ever displayed, so the figures here are already inside the line total.
-   Hence the heading, which says so rather than leaving the customer to add them up again.
-
-   No stylesheet: only classes the theme already emits are used, since a module template is
-   not scanned by the theme's Tailwind (@import "tailwindcss" source(none) in
-   assets/styles/app.css). #}
-{% set d = 'option' %}
-
 <div class="CartItem-options mt-1 paragraph-6 text-grey">
-    <span>{{ 'Included options:'|trans({}, d) }}</span>
-
+    <span>{{ i18ns.included_options }}</span>
     <ul class="mt-1 flex flex-col gap-1">
         {% for option in options %}
             <li class="flex items-center justify-between gap-2">
