@@ -90,6 +90,6 @@ class CartItemCustomizationOptionHandler
             return;
         }
 
-        $this->optionCartItemService->handleCartItemOptionPrice($cartItem, $attached);
+        $this->optionCartItemService->handleCartItemOptionPrice($cartItem);
     }
 }
