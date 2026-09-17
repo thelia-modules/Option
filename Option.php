@@ -14,10 +14,13 @@ declare(strict_types=1);
 
 namespace Option;
 
+use Option\Api\Resource\Option as OptionResource;
 use Propel\Runtime\Connection\ConnectionInterface;
+use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurator;
 use Symfony\Component\Finder\Finder;
 use Thelia\Core\Install\Database;
+use Thelia\Core\Security\Resource\AdminResources;
 use Thelia\Module\BaseModule;
 
 class Option extends BaseModule
@@ -74,10 +77,29 @@ class Option extends BaseModule
     /**
      * Defines how services are loaded in your modules.
      */
+    /**
+     * Declares the module's admin API resource to the permission map.
+     *
+     * Everything under /api/admin is refused by default: a resource the map does not name
+     * is denied to every administrator but the superadministrator, with an AdminLog entry
+     * per call (Thelia\Api\EventListener\AdminApiPermissionListener). The code is the one
+     * the module's own back-office controllers already check for the same data, so a
+     * profile reaches exactly as far through the API as through the admin screens.
+     *
+     */
+    public static function configureContainer(ContainerConfigurator $containerConfigurator): void
+    {
+        $containerConfigurator
+            ->parameters()
+            ->set('thelia.api.admin_resources', [
+                OptionResource::class => AdminResources::MODULE,
+            ]);
+    }
+
     public static function configureServices(ServicesConfigurator $servicesConfigurator): void
     {
         $servicesConfigurator->load(self::getModuleCode().'\\', __DIR__)
-            ->exclude([__DIR__.'/I18n/*'])
+            ->exclude([__DIR__.'/I18n/*', __DIR__.'/Tests/*'])
             ->autowire(true)
             ->autoconfigure(true);
     }
