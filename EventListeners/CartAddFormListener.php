@@ -14,8 +14,8 @@ declare(strict_types=1);
 
 namespace Option\EventListeners;
 
-use Option\Option as OptionModule;
 use Option\Form\Type\OptionGroupType;
+use Option\Option as OptionModule;
 use Option\Service\Front\ProductOptionsService;
 use Option\Service\Front\SelectedOptionsStore;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -23,6 +23,7 @@ use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
+use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Thelia\Core\Event\TheliaEvents;
 use Thelia\Core\Event\TheliaFormEvent;
@@ -91,19 +92,15 @@ final readonly class CartAddFormListener implements EventSubscriberInterface
         $fieldset = $builder->get(self::FIELDSET_NAME);
 
         foreach ($options as $option) {
+            $constraint = $option['customizable'] ? [new Length(['max' => 50])] : [];
+
             $fieldset->add(
                 (string) $option['id'],
-                // Which field an option gets is decided by the merchant, not by the page:
-                // a forged payload can neither tick a customizable option nor type into
-                // one that is not. An option the product does not carry has no field at
-                // all, so it cannot be submitted either.
                 $option['customizable'] ? TextType::class : CheckboxType::class,
                 [
                     'required' => false,
-                    // A checkbox is labelled by the theme's own widget; a customizable
-                    // option is labelled by the module's widget, which also prints its
-                    // price, so letting the theme label it too would print it twice.
                     'label' => $option['customizable'] ? false : ($option['title'] ?: $option['ref']),
+                    'constraints' => [],
                 ]
             );
         }

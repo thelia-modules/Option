@@ -5,7 +5,7 @@
             <li class="flex items-center justify-between gap-2">
                 <span class="min-w-0">
                     {{- option.title -}}
-                    {%- if option.value %} <span class="text-grey-dark">{{ option.value }}</span>{% endif -%}
+                    {%- if option.value %} <span class="text-grey-dark truncate">{{ option.value }}</span>{% endif -%}
                     {#- The cards beside this one print a unit price; this is a line amount,
                         so the quantity it covers is spelled out rather than assumed. -#}
                     {%- if option.quantity > 1 %} <span>× {{ option.quantity }}</span>{% endif -%}
