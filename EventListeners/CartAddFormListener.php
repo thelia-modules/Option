@@ -92,15 +92,14 @@ final readonly class CartAddFormListener implements EventSubscriberInterface
         $fieldset = $builder->get(self::FIELDSET_NAME);
 
         foreach ($options as $option) {
-            $constraint = $option['customizable'] ? [new Length(['max' => 50])] : [];
-
             $fieldset->add(
                 (string) $option['id'],
                 $option['customizable'] ? TextType::class : CheckboxType::class,
                 [
                     'required' => false,
                     'label' => $option['customizable'] ? false : ($option['title'] ?: $option['ref']),
-                    'constraints' => [],
+                    // A free text is capped; a ticked box carries nothing to measure.
+                    'constraints' => $option['customizable'] ? [new Length(max: 50)] : [],
                 ]
             );
         }
