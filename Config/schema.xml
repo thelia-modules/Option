@@ -6,6 +6,7 @@
     <table name="option_product" namespace="Option\Model">
         <column autoIncrement="true" name="id" primaryKey="true" required="true" type="INTEGER" />
         <column name="product_id" required="true" type="INTEGER" />
+        <column defaultValue="0" name="is_customizable" required="true" type="BOOLEAN" />
 
         <foreign-key foreignTable="product" name="fk_option_product_product_id" onDelete="CASCADE" onUpdate="RESTRICT">
             <reference foreign="id" local="product_id" />

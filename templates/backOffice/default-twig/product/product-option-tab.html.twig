@@ -1,28 +1,37 @@
 {# Options tab content for the product edit page (BO twig). #}
-{% set d = 'Option' %}
-{% set token = attribute(form, '_token') %}
+{% set d = 'option' %}
 
 <div class="option-product-tab">
     <h4 class="mb-3">{{ 'Paid options management'|trans({}, d) }}</h4>
 
-    {# Attach an option to the product #}
     {% if is_granted('UPDATE', {resource: 'admin.module', module: 'Option'}) %}
-        <form method="post" action="{{ path('admin_option_product_option_product_set') }}" class="mb-4">
-            <input type="hidden" name="{{ token.vars.full_name }}" value="{{ token.vars.value }}">
-            <input type="hidden" name="{{ form.product_id.vars.full_name }}" value="{{ product_id }}">
-            <input type="hidden" name="{{ form.success_url.vars.full_name }}" value="/admin/products/update?current_tab=product_option_tab&product_id={{ product_id }}">
-            <input type="hidden" name="{{ form.error_url.vars.full_name }}" value="/admin/products/update?current_tab=product_option_tab&product_id={{ product_id }}">
-            <label class="form-label">{{ 'Available options'|trans({}, d) }}</label>
-            <div class="input-group">
-                <select name="{{ form.option_id.vars.full_name }}" required class="form-select">
-                    <option value="" selected disabled>{{ 'Choose an option...'|trans({}, d) }}</option>
-                    {% for choice in form.option_id.vars.choices %}
-                        <option value="{{ choice.value }}">{{ choice.label }}</option>
-                    {% endfor %}
-                </select>
+
+        {# The form only lists the options this product does not already carry. #}
+        {% set form = getForm('product_available_option_form', {product_id}) %}
+        {% form_theme form with bo_form_themes only %}
+
+        {% if form.option_id.vars.choices is empty %}
+            <div class="alert alert-secondary mb-4">{{ 'Every available option is already attached to this product.'|trans({}, d) }}</div>
+        {% else %}
+            {{ form_start(form, {
+                action: path('admin_option_product_option_product_set'),
+                method: 'POST',
+                attr :{ class: 'mb-4'}
+            }) }}
+
+            <input type="hidden" name="{{ field_name(form.product_id) }}" value="{{ product_id }}">
+            <input type="hidden" name="{{ field_name(form.success_url) }}" value="{{ redirect_url }}">
+            <input type="hidden" name="{{ field_name(form.error_url) }}" value="{{ redirect_url }}">
+
+            {{form_rest(form) }}
+
+             <div class="input-group">
                 <button class="btn btn-primary" type="submit">{{ 'Apply'|trans({}, d) }}</button>
             </div>
-        </form>
+
+            {{form_end(form) }}
+        {% endif %}
+
     {% endif %}
 
     {# Options already attached to the product #}

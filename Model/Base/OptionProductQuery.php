@@ -22,9 +22,11 @@ use Thelia\Model\Product;
  *
  * @method     ChildOptionProductQuery orderById($order = Criteria::ASC) Order by the id column
  * @method     ChildOptionProductQuery orderByProductId($order = Criteria::ASC) Order by the product_id column
+ * @method     ChildOptionProductQuery orderByIsCustomizable($order = Criteria::ASC) Order by the is_customizable column
  *
  * @method     ChildOptionProductQuery groupById() Group by the id column
  * @method     ChildOptionProductQuery groupByProductId() Group by the product_id column
+ * @method     ChildOptionProductQuery groupByIsCustomizable() Group by the is_customizable column
  *
  * @method     ChildOptionProductQuery leftJoin($relation) Adds a LEFT JOIN clause to the query
  * @method     ChildOptionProductQuery rightJoin($relation) Adds a RIGHT JOIN clause to the query
@@ -81,12 +83,14 @@ use Thelia\Model\Product;
  *
  * @method     ChildOptionProduct|null findOneById(int $id) Return the first ChildOptionProduct filtered by the id column
  * @method     ChildOptionProduct|null findOneByProductId(int $product_id) Return the first ChildOptionProduct filtered by the product_id column
+ * @method     ChildOptionProduct|null findOneByIsCustomizable(boolean $is_customizable) Return the first ChildOptionProduct filtered by the is_customizable column
  *
  * @method     ChildOptionProduct requirePk($key, ?ConnectionInterface $con = null) Return the ChildOptionProduct by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildOptionProduct requireOne(?ConnectionInterface $con = null) Return the first ChildOptionProduct matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildOptionProduct requireOneById(int $id) Return the first ChildOptionProduct filtered by the id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildOptionProduct requireOneByProductId(int $product_id) Return the first ChildOptionProduct filtered by the product_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildOptionProduct requireOneByIsCustomizable(boolean $is_customizable) Return the first ChildOptionProduct filtered by the is_customizable column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildOptionProduct[]|Collection find(?ConnectionInterface $con = null) Return ChildOptionProduct objects based on current ModelCriteria
  * @psalm-method Collection&\Traversable<ChildOptionProduct> find(?ConnectionInterface $con = null) Return ChildOptionProduct objects based on current ModelCriteria
@@ -95,6 +99,8 @@ use Thelia\Model\Product;
  * @psalm-method Collection&\Traversable<ChildOptionProduct> findById(int|array<int> $id) Return ChildOptionProduct objects filtered by the id column
  * @method     ChildOptionProduct[]|Collection findByProductId(int|array<int> $product_id) Return ChildOptionProduct objects filtered by the product_id column
  * @psalm-method Collection&\Traversable<ChildOptionProduct> findByProductId(int|array<int> $product_id) Return ChildOptionProduct objects filtered by the product_id column
+ * @method     ChildOptionProduct[]|Collection findByIsCustomizable(boolean|array<boolean> $is_customizable) Return ChildOptionProduct objects filtered by the is_customizable column
+ * @psalm-method Collection&\Traversable<ChildOptionProduct> findByIsCustomizable(boolean|array<boolean> $is_customizable) Return ChildOptionProduct objects filtered by the is_customizable column
  *
  * @method     ChildOptionProduct[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  * @psalm-method \Propel\Runtime\Util\PropelModelPager&\Traversable<ChildOptionProduct> paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
@@ -194,7 +200,7 @@ abstract class OptionProductQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT `id`, `product_id` FROM `option_product` WHERE `id` = :p0';
+        $sql = 'SELECT `id`, `product_id`, `is_customizable` FROM `option_product` WHERE `id` = :p0';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key, PDO::PARAM_INT);
@@ -372,6 +378,35 @@ abstract class OptionProductQuery extends ModelCriteria
         }
 
         $this->addUsingAlias(OptionProductTableMap::COL_PRODUCT_ID, $productId, $comparison);
+
+        return $this;
+    }
+
+    /**
+     * Filter the query on the is_customizable column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByIsCustomizable(true); // WHERE is_customizable = true
+     * $query->filterByIsCustomizable('yes'); // WHERE is_customizable = true
+     * </code>
+     *
+     * @param bool|string $isCustomizable The value to use as filter.
+     *              Non-boolean arguments are converted using the following rules:
+     *                * 1, '1', 'true',  'on',  and 'yes' are converted to boolean true
+     *                * 0, '0', 'false', 'off', and 'no'  are converted to boolean false
+     *              Check on string values is case insensitive (so 'FaLsE' is seen as 'false').
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByIsCustomizable($isCustomizable = null, ?string $comparison = null)
+    {
+        if (is_string($isCustomizable)) {
+            $isCustomizable = in_array(strtolower($isCustomizable), array('false', 'off', '-', 'no', 'n', '0', ''), true) ? false : true;
+        }
+
+        $this->addUsingAlias(OptionProductTableMap::COL_IS_CUSTOMIZABLE, $isCustomizable, $comparison);
 
         return $this;
     }

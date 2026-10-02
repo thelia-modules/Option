@@ -1,8 +1,25 @@
-{# Option module configuration page — list of option-products + create/delete (BO twig). #}
-{% set d = 'Option' %}
+{% set d = 'option' %}
 {% set token = attribute(creationForm, '_token') %}
 
 <div class="option-configuration">
+    {# A refused creation comes back here through error_url, outside the modal. #}
+    {% if creationFormError is defined and creationFormError %}
+        <div class="alert alert-danger" role="alert">
+            {{ creationFormError }}
+            {% set fieldErrors = [] %}
+            {% for child in creationForm %}
+                {% for error in child.vars.errors %}
+                    {% set fieldErrors = fieldErrors|merge([error.message]) %}
+                {% endfor %}
+            {% endfor %}
+            {% if fieldErrors is not empty %}
+                <ul class="mb-0 mt-2">
+                    {% for message in fieldErrors %}<li>{{ message }}</li>{% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    {% endif %}
+
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <span>{{ 'Paid options'|trans({}, d) }}</span>
@@ -83,7 +100,6 @@
                     <input type="hidden" name="{{ creationForm.locale.vars.full_name }}" value="{{ locale }}">
                     <input type="hidden" name="{{ creationForm.default_category.vars.full_name }}" value="{{ category_id }}">
                     <input type="hidden" name="{{ creationForm.currency.vars.full_name }}" value="{{ currency_id }}">
-                    <input type="hidden" name="{{ creationForm.template_id.vars.full_name }}" value="0">
                     <input type="hidden" name="{{ creationForm.visible.vars.full_name }}" value="1">
                     <input type="hidden" name="{{ creationForm.virtual.vars.full_name }}" value="0">
                     <input type="hidden" name="{{ creationForm.quantity.vars.full_name }}" value="0">
@@ -96,11 +112,11 @@
                         <div class="modal-body">
                             <div class="mb-3">
                                 <label class="form-label">{{ 'Option reference'|trans({}, d) }} *</label>
-                                <input type="text" class="form-control" required name="{{ creationForm.ref.vars.full_name }}">
+                                <input type="text" class="form-control" required name="{{ creationForm.ref.vars.full_name }}" value="{{ creationForm.ref.vars.value }}">
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">{{ 'Option title'|trans({}, d) }} *</label>
-                                <input type="text" class="form-control" required name="{{ creationForm.title.vars.full_name }}">
+                                <input type="text" class="form-control" required name="{{ creationForm.title.vars.full_name }}" value="{{ creationForm.title.vars.value }}">
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">{{ 'Tax rule for this option'|trans({}, d) }} *</label>
@@ -113,7 +129,15 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">{{ 'Price'|trans({}, d) }} ({{ currency_symbol }}) *</label>
-                                <input type="text" class="form-control" required name="{{ creationForm.price.vars.full_name }}" value="0">
+                                <input type="text" class="form-control" required name="{{ creationForm.price.vars.full_name }}" value="{{ creationForm.price.vars.value ?: 0 }}">
+                            </div>
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="option-create-is-customizable"
+                                       name="{{ creationForm.is_customizable.vars.full_name }}"
+                                       value="{{ creationForm.is_customizable.vars.value }}"
+                                       {{ creationForm.is_customizable.vars.checked ? 'checked' : '' }}>
+                                <label class="form-check-label" for="option-create-is-customizable">{{ 'Customizable option'|trans({}, d) }}</label>
+                                <div class="form-text">{{ 'The customer fills in a value for this option when adding it to the cart.'|trans({}, d) }}</div>
                             </div>
                         </div>
                         <div class="modal-footer">

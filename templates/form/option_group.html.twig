@@ -1,0 +1,49 @@
+{# Widget of Option\Form\Type\OptionGroupType: the paid options of a product, inside the
+   theme's add-to-cart form.
+
+   No stylesheet: the geometry is Tailwind utilities and the typography is the theme's own
+   tokens (h4, paragraph-4, text-grey). The theme declares `@import "tailwindcss" source(none)`,
+   so this directory only gets scanned because app.css lists it under @source: a theme that
+   drops that line emits none of the classes below. #}
+{% block option_group_widget %}
+    <fieldset class="mt-6 flex flex-col gap-3">
+        {% if group_label %}
+            <legend class="mb-4 h5">{{ group_label }}</legend>
+        {% endif %}
+
+        {% for child in form %}
+            {% set row = option_rows[child.vars.name]|default(null) %}
+            <div class="flex flex-col gap-1">
+                {% if row and row.customizable %}
+                    {# Picked by typing in it, so its own label carries the price and no box
+                       is offered: a box would be a second way to say the same thing. #}
+                    <label class="text-sm font-medium" for="{{ child.vars.id }}">
+                        {{- row.title ?: row.ref }} <span class="font-normal text-grey-dark">({{ _self.price(row) }})</span>
+                    </label>
+                    {{ form_widget(child) }}
+                {% else %}
+                    <div class="flex items-center justify-between gap-4">
+                        {# The theme's checkbox widget prints its own label, so no form_label() here. #}
+                        <div class="min-w-0">{{ form_widget(child) }}</div>
+                        {% if row %}
+                            <span class="shrink-0 text-sm">{{ _self.price(row) }}</span>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                {% if row and row.chapo %}
+                    <p class="paragraph-4 text-grey">{{ row.chapo }}</p>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </fieldset>
+{% endblock %}
+
+{% macro price(row) %}
+    {%- if row.promo -%}
+        {{ row.promoPrice|format_currency('EUR', locale: lang_code) }}
+        <s class="text-grey">{{ row.price|format_currency('EUR', locale: lang_code) }}</s>
+    {%- else -%}
+        {{ row.price|format_currency('EUR', locale: lang_code) }}
+    {%- endif -%}
+{% endmacro %}

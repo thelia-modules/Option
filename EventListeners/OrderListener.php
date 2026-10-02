@@ -2,6 +2,16 @@
 
 declare(strict_types=1);
 
+/*
+ * This file is part of the Thelia package.
+ * http://www.thelia.net
+ *
+ * (c) OpenStudio <info@thelia.net>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Option\EventListeners;
 
 use Option\Model\OptionCartItemOrderProductQuery;
@@ -39,6 +49,11 @@ class OrderListener implements EventSubscriberInterface
     protected function setOrderProductData(OrderProduct $orderProduct): void
     {
         $cartItemId = $orderProduct->getCartItemId();
+
+        if (null === $cartItemId) {
+            return;
+        }
+
         $optionCartItemOrderProducts = OptionCartItemOrderProductQuery::create()
             ->filterByCartItemOptionId($cartItemId)
             ->find();
@@ -52,8 +67,8 @@ class OrderListener implements EventSubscriberInterface
 
     public static function getSubscribedEvents(): array
     {
-        return array(
-            TheliaEvents::ORDER_BEFORE_PAYMENT => ['handleCustomization', 200]
-        );
+        return [
+            TheliaEvents::ORDER_BEFORE_PAYMENT => ['handleCustomization', 200],
+        ];
     }
 }
