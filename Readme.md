@@ -9,6 +9,35 @@ the product page to the invoice.
 
 This version requires Thelia 3.0.
 
+## Upgrading from 2.x
+
+3.0.0 runs on Thelia 3.0 only; the 2.x line keeps serving Thelia 2. The schema gains a
+single column, `option_product.is_customizable`, added by the module update
+(`Config/update/2.0.3.sql`): existing options, attachments and past orders carry over.
+
+What a module or a theme built on 2.x has to change:
+
+- The front controller, `OptionFrontForm` and the loop extensions are gone. Options ride in
+  the core add-to-cart form (see [Front office](#front-office)); a theme posting to the old
+  route has to submit `thelia_cart_add[options][<optionId>]` instead.
+- `OptionService::createOptionCategory($title, $locale, $parent)` loses its `$title`
+  argument: the category title is the fixed `Option::OPTION_CATEGORY_TITLE`.
+- `OptionService::getOptionPrice()`, `getOptionTaxedPrice()` and `getOptionUnTaxedPrice()`
+  take an optional currency, the visitor's by default, instead of reading the first price
+  row of the option.
+- `OptionCartItemService`: `handleCartItemOptionPrice(CartItem)` no longer takes the
+  options, it reads them from the line; `removeCartItemOptionPrice()`,
+  `calculateTotalCustomPrice()` and `getOptionsByCartItem()` are gone, replaced by
+  `reconcileCartItemPrice()` and `optionSupplement()`.
+- `OptionOrderProductService` and `CartItemCustomizationOptionHandler` have new constructor
+  arguments; `OptionOrderProductService::getCustomizationUntaxedPrice()` is gone, the
+  amounts frozen on the cart are copied to the order instead of being recomputed.
+- `OptionProductProvider` takes `OptionService`, and front reads only return visible
+  options.
+
+Every service above is autowired: only a class that extends one of them, or builds it by
+hand, needs touching.
+
 ## Installation
 
 ```
@@ -146,6 +175,7 @@ every line.
 
 ## Overriding the back-office display
 
-Customization data is printed under each order product line in the back office. To change
-how it looks, override
+The options bought with an order product line are listed under it in the back office, by
+name and with what the customer typed, as the order recorded them. To change how it looks,
+override
 `templates/backOffice/default-twig/Option/order-product/order_product_additional_data.html.twig`.
