@@ -10,7 +10,7 @@
                         so the quantity it covers is spelled out rather than assumed. -#}
                     {%- if option.quantity > 1 %} <span>× {{ option.quantity }}</span>{% endif -%}
                 </span>
-                <span class="shrink-0">{{ option.price|format_currency('EUR', locale: lang_code) }}</span>
+                <span class="shrink-0">{{ option.price|format_currency(option.currency, locale: lang_code) }}</span>
             </li>
         {% endfor %}
     </ul>
