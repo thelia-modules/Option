@@ -13,6 +13,7 @@ use Thelia\Core\Event\Currency\CurrencyChangeEvent;
 use Thelia\Core\Event\TheliaEvents;
 use Thelia\Core\HttpFoundation\Session\Session;
 use Thelia\Model\Cart;
+use Thelia\Model\CartItemQuery;
 use Thelia\Model\CartQuery;
 
 /**
@@ -95,7 +96,17 @@ final readonly class CartOptionPriceListener implements EventSubscriberInterface
             return;
         }
 
-        foreach ($cart->getCartItems() as $cartItem) {
+        // Queried, never read through $cart->getCartItems(): that would load the lines into
+        // the collection the Cart object caches, before the promotions (CART_ADDITEM, 10)
+        // add their offered lines, and whatever reads that collection next — the order
+        // being built from this very cart — would miss them.
+        // An offered line belongs to the promotion that placed it and carries no option.
+        $cartItems = CartItemQuery::create()
+            ->filterByCartId($cart->getId())
+            ->filterByIsOffered(0)
+            ->find();
+
+        foreach ($cartItems as $cartItem) {
             $this->optionCartItemService->reconcileCartItemPrice($cartItem);
         }
     }
