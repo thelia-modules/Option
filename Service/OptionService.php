@@ -18,15 +18,17 @@ use Option\Event\CheckOptionEvent;
 use Option\Model\ProductAvailableOptionQuery;
 use Option\Option as OptionModule;
 use Symfony\Component\Form\Form;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Thelia\Core\Event\Product\ProductDeleteEvent;
 use Thelia\Core\Event\TheliaEvents;
+use Thelia\Core\HttpFoundation\Session\Session;
 use Thelia\Core\Translation\Translator;
 use Thelia\Domain\Taxation\TaxEngine\TaxEngine;
 use Thelia\Model\Category;
 use Thelia\Model\CategoryQuery;
+use Thelia\Model\Currency;
 use Thelia\Model\Product;
-use Thelia\Model\ProductPrice;
 
 /**
  * One option is identical to the Thelia product model.
@@ -40,6 +42,7 @@ class OptionService
         protected EventDispatcherInterface $dispatcher,
         protected OptionProvider $optionProvider,
         protected TaxEngine $taxEngine,
+        protected RequestStack $requestStack,
     ) {
     }
 
@@ -152,19 +155,18 @@ class OptionService
         return false === $event->isValid() ? [] : $event->getOptions();
     }
 
-    public function getOptionPrice(Product $option, bool $isPromo = false, $isTaxed = true): float|int
+    /**
+     * Priced in the given currency, the way the core prices a product line: the row of that
+     * currency, or the default currency's converted at the rate. Without a currency, the
+     * visitor's one, so what the product page shows is what the cart will charge.
+     */
+    public function getOptionPrice(Product $option, bool $isPromo = false, bool $isTaxed = true, ?Currency $currency = null): float|int
     {
         $taxCountry = $this->taxEngine->getDeliveryCountry();
         $taxState = $this->taxEngine->getDeliveryState();
-        $optionPse = $option->getDefaultSaleElements();
 
-        /** @var ProductPrice $optionPseProductPrice */
-        $optionPseProductPrice = $optionPse->getProductPrices()->getFirst();
-
-        $optionPrice = $optionPseProductPrice->getPrice();
-        if ($isPromo) {
-            $optionPrice = $optionPseProductPrice->getPromoPrice();
-        }
+        $prices = $option->getDefaultSaleElements()->getPricesByCurrency($currency ?? $this->currentCurrency());
+        $optionPrice = $isPromo ? $prices->getPromoPrice() : $prices->getPrice();
 
         if (!$isTaxed) {
             return (float) $optionPrice;
@@ -173,13 +175,21 @@ class OptionService
         return $option->getTaxedPrice($taxCountry, $optionPrice, $taxState);
     }
 
-    public function getOptionTaxedPrice(Product $option, bool $isPromo = false): float|int
+    public function getOptionTaxedPrice(Product $option, bool $isPromo = false, ?Currency $currency = null): float|int
     {
-        return $this->getOptionPrice($option, $isPromo);
+        return $this->getOptionPrice($option, $isPromo, true, $currency);
     }
 
-    public function getOptionUnTaxedPrice(Product $option, bool $isPromo = false): float|int
+    public function getOptionUnTaxedPrice(Product $option, bool $isPromo = false, ?Currency $currency = null): float|int
     {
-        return $this->getOptionPrice($option, $isPromo, false);
+        return $this->getOptionPrice($option, $isPromo, false, $currency);
+    }
+
+    private function currentCurrency(): Currency
+    {
+        $request = $this->requestStack->getCurrentRequest();
+        $session = $request?->hasSession() ? $request->getSession() : null;
+
+        return $session instanceof Session ? $session->getCurrency() : Currency::getDefaultCurrency();
     }
 }

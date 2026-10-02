@@ -191,7 +191,8 @@ class OptionCartItemService
         }, ARRAY_FILTER_USE_KEY);
 
         $taxCalculator = $this->getTaxCalculator($cartItem);
-        $price = $this->optionService->getOptionTaxedPrice($optionProduct->getProduct());
+        // The cart's currency, not the visitor's: the line it hangs under is priced in it.
+        $price = $this->optionService->getOptionTaxedPrice($optionProduct->getProduct(), false, $cartItem->getCart()->getCurrency());
         $untaxedPrice = $taxCalculator->getUntaxedPrice($price);
 
         $optionCartItem
