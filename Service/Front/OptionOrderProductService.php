@@ -155,7 +155,7 @@ class OptionOrderProductService
         $locale = $this->currentLocale();
         $product->setLocale($locale);
 
-        $title = $resolved->product->setLocale('fr_FR')->getTitle();
+        $title = $this->optionTitle($resolved->product, $placedOrder, $locale);
 
         // Copied, never recomputed. Both figures were settled when the visitor picked the
         // option, with the tax rule of the product it hangs under and the delivery country
@@ -247,6 +247,30 @@ class OptionOrderProductService
         return $session instanceof Session
             ? $session->getLang()->getLocale()
             : Lang::getDefaultLanguage()->getLocale();
+    }
+
+    /**
+     * The option's name in the language of the order, else in the one being browsed, else
+     * in the shop's: the line is what the invoice prints, it never goes out unnamed. An
+     * option titled in none of them is named by its reference.
+     */
+    private function optionTitle(Product $option, Order $placedOrder, string $currentLocale): string
+    {
+        $locales = array_unique(array_filter([
+            $placedOrder->getLang()?->getLocale(),
+            $currentLocale,
+            Lang::getDefaultLanguage()->getLocale(),
+        ]));
+
+        foreach ($locales as $locale) {
+            $title = trim((string) $option->setLocale($locale)->getTitle());
+
+            if ('' !== $title) {
+                return $title;
+            }
+        }
+
+        return (string) $option->getRef();
     }
 
     public function getCustomizationTaxeRule(?Product $product = null): ?TaxRule
