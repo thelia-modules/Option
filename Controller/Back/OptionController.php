@@ -185,9 +185,7 @@ class OptionController extends BaseAdminController
             return $response;
         }
 
-        $tokenProvider->checkToken(
-            $request->query->get('_token')
-        );
+        $tokenProvider->checkToken((string) $request->request->get('_token'));
 
         $productId = (int) $request->get('product_id');
 

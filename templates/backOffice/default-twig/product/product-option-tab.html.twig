@@ -51,8 +51,9 @@
                             <i class="bi bi-eye"></i>
                         </a>
                         {% if is_granted('DELETE', {resource: 'admin.module', module: 'Option'}) %}
-                            <form method="post" action="{{ path('admin_option_product_option_product_delete') }}?_token={{ assignToken() }}"
+                            <form method="post" action="{{ path('admin_option_product_option_product_delete') }}"
                                   class="d-inline" onsubmit="return confirm('{{ 'Remove this option from the product?'|trans({}, d) }}')">
+                                <input type="hidden" name="_token" value="{{ assignToken() }}">
                                 <input type="hidden" name="option_product_id" value="{{ option.optionProductId }}">
                                 <input type="hidden" name="product_id" value="{{ product_id }}">
                                 <input type="hidden" name="force" value="0">

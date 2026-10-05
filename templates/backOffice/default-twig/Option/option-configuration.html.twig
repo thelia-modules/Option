@@ -154,7 +154,8 @@
     {% if is_granted('DELETE', {resource: 'admin.module', module: 'Option'}) %}
         <div class="modal fade" id="option-delete-modal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog">
-                <form method="post" action="{{ path('admin_option_delete_option') }}?_token={{ assignToken() }}">
+                <form method="post" action="{{ path('admin_option_delete_option') }}">
+                    <input type="hidden" name="_token" value="{{ assignToken() }}">
                     <input type="hidden" name="product_id" id="option-delete-id" value="">
                     <div class="modal-content">
                         <div class="modal-header">

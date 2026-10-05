@@ -93,7 +93,7 @@ class ProductAvailableOptionController extends BaseAdminController
             return $response;
         }
 
-        $tokenProvider->checkToken($request->get('_token'));
+        $tokenProvider->checkToken((string) $request->request->get('_token'));
 
         try {
             $optionProductId = $request->get('option_product_id');
