@@ -84,7 +84,7 @@ class OptionController extends BaseAdminController
             return $response;
         }
 
-        if (!$optionId = $request->get('option_id')) {
+        if (!$optionId = $request->query->get('option_id')) {
             return $this->pageNotFound();
         }
 
@@ -187,7 +187,7 @@ class OptionController extends BaseAdminController
 
         $tokenProvider->checkToken((string) $request->request->get('_token'));
 
-        $productId = (int) $request->get('product_id');
+        $productId = (int) $request->request->get('product_id');
 
         // Only option-products may be deleted through this screen: reject a forged id
         // pointing at any other catalog product.

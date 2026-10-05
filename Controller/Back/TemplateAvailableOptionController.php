@@ -71,8 +71,8 @@ class TemplateAvailableOptionController extends BaseAdminController
         $tokenProvider->checkToken((string) $request->request->get('_token'));
 
         try {
-            $optionProductId = $request->get('option_product_id');
-            $templateId = $request->get('template_id');
+            $optionProductId = $request->request->get('option_product_id');
+            $templateId = $request->request->get('template_id');
 
             if (!$optionProductId || !$templateId) {
                 return $this->pageNotFound();

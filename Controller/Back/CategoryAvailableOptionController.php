@@ -88,9 +88,9 @@ class CategoryAvailableOptionController extends BaseAdminController
         $tokenProvider->checkToken((string) $request->request->get('_token'));
 
         try {
-            $optionProductId = $request->get('option_product_id');
-            $categoryId = $request->get('category_id');
-            $deleteAll = $request->get('delete_all');
+            $optionProductId = $request->request->get('option_product_id');
+            $categoryId = $request->request->get('category_id');
+            $deleteAll = $request->request->get('delete_all');
 
             if (!$optionProductId || !$categoryId || $deleteAll === null) {
                 return $this->pageNotFound();
