@@ -46,8 +46,9 @@
                                 <td class="text-end">{{ option.price is not null ? option.price|number_format(2, '.', ' ') : '—' }}</td>
                                 <td class="text-end">
                                     {% if is_granted('DELETE', {resource: 'admin.module', module: 'Option'}) %}
-                                        <form method="post" action="{{ path('admin_option_template_option_template_delete') }}?_token={{ assignToken() }}"
+                                        <form method="post" action="{{ path('admin_option_template_option_template_delete') }}"
                                               class="d-inline" onsubmit="return confirm('{{ 'Remove this option from the template?'|trans({}, d) }}')">
+                                            <input type="hidden" name="_token" value="{{ assignToken() }}">
                                             <input type="hidden" name="template_id" value="{{ template_id }}">
                                             <input type="hidden" name="option_product_id" value="{{ option.optionProductId }}">
                                             <button type="submit" class="btn btn-danger btn-sm" title="{{ 'Delete this option'|trans({}, d) }}">
