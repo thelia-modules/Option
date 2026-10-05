@@ -96,9 +96,9 @@ class ProductAvailableOptionController extends BaseAdminController
         $tokenProvider->checkToken((string) $request->request->get('_token'));
 
         try {
-            $optionProductId = $request->get('option_product_id');
-            $productId = $request->get('product_id');
-            $force = $request->get('force');
+            $optionProductId = $request->request->get('option_product_id');
+            $productId = $request->request->get('product_id');
+            $force = $request->request->get('force');
 
             if (!$optionProductId || !$productId || $force === null) {
                 return $this->pageNotFound();
