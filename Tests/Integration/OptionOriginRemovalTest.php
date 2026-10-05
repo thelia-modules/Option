@@ -95,4 +95,30 @@ final class OptionOriginRemovalTest extends ActionIntegrationTestCase
                 ->count(),
         );
     }
+
+    public function testRemovingFromTheProductDropsAnOptionAttachedByBothItsCategoryAndItsTemplate(): void
+    {
+        $currency = $this->factory->currency();
+        $taxRule = $this->factory->taxRule();
+        $category = $this->factory->category();
+        $product = $this->factory->product($category, $taxRule, $currency, ['baseQuantity' => 10, 'basePrice' => 10.0]);
+        $source = $this->factory->product($this->factory->category(), $taxRule, $currency, ['baseQuantity' => 10, 'basePrice' => 5.0]);
+        $option = (new OptionProduct())->setProductId($source->getId())->setIsCustomizable(false);
+        $option->save();
+
+        $service = $this->getService(OptionProductService::class);
+        $service->setOptionOnProduct($product->getId(), $option->getId(), OptionProductService::ADDED_BY_CATEGORY);
+        $service->setOptionOnProduct($product->getId(), $option->getId(), OptionProductService::ADDED_BY_TEMPLATE);
+
+        $service->deleteOptionOnProduct($option->getId(), $product->getId(), OptionProductService::ADDED_BY_PRODUCT);
+
+        self::assertSame(
+            0,
+            ProductAvailableOptionQuery::create()
+                ->filterByProductId($product->getId())
+                ->filterByOptionId($option->getId())
+                ->count(),
+            'the delete button of the product page removes the option whatever attached it',
+        );
+    }
 }

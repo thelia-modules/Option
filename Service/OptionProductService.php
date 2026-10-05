@@ -126,6 +126,11 @@ class OptionProductService
             }
             if (!$force && (count($addedBy) > 1)) {
                 $origin = array_search($deletedBy, $addedBy, true);
+                if (false === $origin && self::ADDED_BY_PRODUCT === $deletedBy) {
+                    $productAvailableOption->delete();
+
+                    return;
+                }
                 if (false === $origin) {
                     return;
                 }
