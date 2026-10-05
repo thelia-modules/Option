@@ -122,7 +122,11 @@ class OptionProductService
         if (null !== $productAvailableOption) {
             $addedBy = $productAvailableOption->getOptionAddedBy();
             if (!$force && (count($addedBy) > 1)) {
-                unset($addedBy[array_search($deletedBy, $addedBy, true)]);
+                $origin = array_search($deletedBy, $addedBy, true);
+                if (false === $origin) {
+                    return;
+                }
+                unset($addedBy[$origin]);
                 $productAvailableOption->setOptionAddedBy(json_encode(array_values($addedBy), JSON_THROW_ON_ERROR))->save();
             } else {
                 $productAvailableOption->delete();
