@@ -121,6 +121,9 @@ class OptionProductService
 
         if (null !== $productAvailableOption) {
             $addedBy = $productAvailableOption->getOptionAddedBy();
+            if (!$force && 1 === count($addedBy) && self::ADDED_BY_PRODUCT !== $deletedBy && !in_array($deletedBy, $addedBy, true)) {
+                return;
+            }
             if (!$force && (count($addedBy) > 1)) {
                 $origin = array_search($deletedBy, $addedBy, true);
                 if (false === $origin) {
