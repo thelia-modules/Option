@@ -31,7 +31,7 @@ class OptionCreationForm extends BaseForm
             ->add('locale', TextType::class, ['constraints' => [new NotBlank()]])
             ->add('default_category', IntegerType::class, ['constraints' => [new NotBlank()]])
             ->add('tax_rule', IntegerType::class, ['constraints' => [new NotBlank()]])
-            ->add('price', NumberType::class, ['constraints' => [new NotBlank(), new GreaterThanOrEqual(['value' => 0])]])
+            ->add('price', NumberType::class, ['constraints' => [new NotBlank(), new GreaterThanOrEqual(value: 0)]])
             ->add('currency', IntegerType::class, ['constraints' => [new NotBlank()]])
             ->add('weight', NumberType::class, ['required' => false])
             ->add('quantity', IntegerType::class, ['required' => false])
