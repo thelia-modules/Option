@@ -134,7 +134,6 @@ class OptionCartItemService
         // Propel's generated PHPDoc types these relations as never null, and the getters
         // hand back null all the same when there is no id to follow — which is why the
         // core guards the very same calls in Thelia\Action\Cart::refreshCartItemPrices().
-        /** @phpstan-ignore identical.alwaysFalse */
         if (null === $productSaleElements = $cartItem->getProductSaleElements()) {
             return null;
         }
