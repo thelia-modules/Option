@@ -50,7 +50,6 @@ final readonly class OptionLineResolver
         // product_available_option.option_id is required and cascades, so Propel types
         // this getter non-nullable and is right — until a row survives an import or a
         // migration run with the foreign key checks off, which costs nothing to survive.
-        /** @phpstan-ignore identical.alwaysFalse */
         if (null === $optionProduct = $productAvailableOption->getOptionProduct()) {
             return null;
         }
