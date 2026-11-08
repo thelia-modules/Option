@@ -72,14 +72,14 @@ class Option extends BaseModule
         }
     }
 
-    /**
-     * Defines how services are loaded in your modules.
-     */
     public static function getCompilers(): array
     {
         return [new AdminApiResourcesPass()];
     }
 
+    /**
+     * Defines how services are loaded in your modules.
+     */
     public static function configureServices(ServicesConfigurator $servicesConfigurator): void
     {
         $servicesConfigurator->load(self::getModuleCode().'\\', __DIR__)
