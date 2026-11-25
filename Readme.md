@@ -47,6 +47,11 @@ class OptionKnifeTextForm extends BaseOptionFrontForm
 }
 ```
 
+An option that has no form named after its reference falls back on [OptionFrontForm.php](Form%2FOptionFrontForm.php).
+Besides the option id, this form accepts `code`, `title`, `price` and a free `text`, all optional. An option created 
+from the back-office can therefore be added to the cart, with a text typed by the customer, without writing a form. 
+Declare a dedicated form when the option needs other fields, or validation rules on the text.
+
 Front-End Application
 
 Two routes are available to manipulate options and products in the shopping cart.
